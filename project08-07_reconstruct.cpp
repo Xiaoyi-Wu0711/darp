@@ -570,19 +570,27 @@ float Global_solution::calculate_frequency(int line_index, const vector<stop>& s
  		according to equation 8: NV= 2*end_to_end_time/ headway_time ****/  
 int Global_solution::Generate_NV(int line_index, int init_headway_time, const vector<stop>& set_of_stations) const{
 	this->check_consistency();
-	float bus_number = 2* this->end_to_end_time(line_index, set_of_stations)/init_headway_time;
-	int  bus_number_on_each_line  = floor(bus_number)+1;
-	//check for xiaoyi
+	float bus_number;
+	// if(end_to_end_time(line_index, set_of_stations)>9998){
+	// 	bus_number=MYINFINITY;
+	// }else{
+		// bus_number = 2* this->end_to_end_time(line_index, set_of_stations)/init_headway_time;
+	// }
+	bus_number = 2* this->end_to_end_time(line_index, set_of_stations)/init_headway_time;
+
+	int  bus_number_on_line  = floor(bus_number)+1;
+	cout<<"  bus_number_on_line   "<<bus_number_on_line<<endl;
+	// //check for xiaoyi
 	// if(this->headway_time[line_index] > 9998 || end_to_end_time(line_index, set_of_stations) > 9998){
 	// 		cout<<"\n this->L.at(line_index).get_nbr_stat() \t"<<this->L.at(line_index).get_nbr_stat()<<endl;
 	// 		cout<<"\n line index \t"<<line_index<<endl;
 	// 		cout<<"\n this->end_to_end_time(line_index, set_of_stations) \t"<<this->end_to_end_time(line_index, set_of_stations) <<endl;
 	// 		cout<<"\n L[line_index].freq \t"<<this->L[line_index].freq<<endl;
 	// 		cout<<"\n headway_time[line_index] \t"<<this->headway_time[line_index]<<endl;
-	// 		cout<<"\n bus_number_on_each_line \t"<<bus_number_on_each_line<<endl;
-	// 		exit(0)
+	// 		cout<<"\n bus_number_on_each_line \t"<<bus_number_on_line<<endl;
+	// 		exit(0);
 	// }
-	return bus_number_on_each_line;
+	return bus_number_on_line;
 }
 
 
@@ -594,13 +602,13 @@ void Global_solution::update_headway_time(const vector<stop>& set_of_stations){
 		float freq =this->calculate_frequency(line_index, set_of_stations);
 		if (freq ==0){
 			headway_time[line_index]=MYINFINITY;
-			cout<<"\n this->L.at(line_index).get_nbr_stat() \t"<<this->L.at(line_index).get_nbr_stat()<<endl;
-			cout<<"\n line index \t"<<line_index<<endl;
-			cout<<"\n this->end_to_end_time(line_index, set_of_stations) \t"<<this->end_to_end_time(line_index, set_of_stations) <<endl;
-			this->calculate_frequency(line_index,set_of_stations);
-			cout<<"\n L[line_index].freq \t"<<L[line_index].freq <<endl;
-			cout<<"\n headway_time[line_index] \t"<<headway_time[line_index]<<endl;
-			exit(0);
+			// cout<<"\n this->L.at(line_index).get_nbr_stat() \t"<<this->L.at(line_index).get_nbr_stat()<<endl;
+			// cout<<"\n line index \t"<<line_index<<endl;
+			// cout<<"\n this->end_to_end_time(line_index, set_of_stations) \t"<<this->end_to_end_time(line_index, set_of_stations) <<endl;
+			// this->calculate_frequency(line_index,set_of_stations);
+			// cout<<"\n L[line_index].freq \t"<<L[line_index].freq <<endl;
+			// cout<<"\n headway_time[line_index] \t"<<headway_time[line_index]<<endl;
+			// exit(0);
 		}else{
 			headway_time[line_index]=1/freq;
 		}
@@ -720,7 +728,6 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 		for (int i = 0; i < V.size(); i++)         //Not yet visited node
 		{	
 			if (V[i].station_id == s){ //the starting station id 
-		
 				d[i] = t_ingress + this->headway_time[V[i].line_id]; //the time to go to transit and headway waiting time
 				if(d[i]>MYINFINITY){
 					cout<<"\n i \t"<<i<<endl;
@@ -728,6 +735,7 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 					cout<<"\n V[i].line_id \t"<<V[i].line_id<<endl;
 					cout<<"\n d[i] \t"<<d[i]<<endl;
 					cout<<"\n Line \t"<<__LINE__<<endl;
+					cout<<"\n warning: d[i]>MYINFINITY!!!"<<endl;
 					exit(1);
 					// cout<<"end_to_end_time(V[i].line_id, set_of_stations)"<<this->end_to_end_time(V[i].line_id, set_of_stations)<<endl;
 				}
@@ -746,24 +754,24 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 					u = *iter;
 				}
 			}
-			if( u ==-1){
-				for (set<int>::iterator iter=pending.begin(); iter!=pending.end(); iter++){
-					cout<<"\n iter \t"<<*iter<<endl;
-					cout<<"\n pending.size() \t"<<pending.size()<<endl;
-					cout<<"\n d[*iter] \t "<<d[*iter]<<endl;
-					cout<<"\n u==-1 line_index"<<V[*iter].line_id<<endl;
+			// if( u ==-1){
+			// 	for (set<int>::iterator iter=pending.begin(); iter!=pending.end(); iter++){
+			// 		cout<<"\n iter \t"<<*iter<<endl;
+			// 		cout<<"\n pending.size() \t"<<pending.size()<<endl;
+			// 		cout<<"\n d[*iter] \t "<<d[*iter]<<endl;
+			// 		cout<<"\n u==-1 line_index"<<V[*iter].line_id<<endl;
 
-					cout<<"\n u==-1 LIN_.at(line_index).get_nbr_stat() \t"<< LIN_.at(V[*iter].line_id).get_nbr_stat()<<endl;
-					cout<<"this->L.at(V[*iter].line_id).get_nbr_stat()\t"<<this->L.at(V[*iter].line_id).get_nbr_stat()<<endl;
+			// 		cout<<"\n u==-1 LIN_.at(line_index).get_nbr_stat() \t"<< LIN_.at(V[*iter].line_id).get_nbr_stat()<<endl;
+			// 		cout<<"this->L.at(V[*iter].line_id).get_nbr_stat()\t"<<this->L.at(V[*iter].line_id).get_nbr_stat()<<endl;
 
-					cout<<"\n u==-1 LIN_.at(V[i].line_id).freq \t"<< LIN_.at(V[*iter].line_id).freq<<endl;
-					cout<<"this->LIN.at(V[*iter].line_id).freq \t"<<this->L.at(V[*iter].line_id).freq<<endl;
+			// 		cout<<"\n u==-1 LIN_.at(V[i].line_id).freq \t"<< LIN_.at(V[*iter].line_id).freq<<endl;
+			// 		cout<<"this->LIN.at(V[*iter].line_id).freq \t"<<this->L.at(V[*iter].line_id).freq<<endl;
 
-					cout<<"end_to_end_time(V[i].line_id, set_of_stations)"<<this->end_to_end_time(V[i].line_id, set_of_stations)<<endl;
+			// 		cout<<"end_to_end_time(V[i].line_id, set_of_stations)"<<this->end_to_end_time(V[i].line_id, set_of_stations)<<endl;
 
-				}
-				exit(1);
-			}
+			// 	}
+			// 	exit(1);
+			// }
 
 			// retrieve u from the pending set and update the value of the sucessors of u
 			// when the value is updated, the node is added to the set (no impact if it was already in the set)
@@ -1405,8 +1413,7 @@ void Problem::construct_data_problem(const Network &n, const Global_solution& gl
 
 
 
-void Problem::compute_user_dissimilarity(const Network &n, int n_ride_sharing_requests)
-{
+void Problem::compute_user_dissimilarity(const Network &n, int n_ride_sharing_requests){
 
 			for (int i=0; i<n_ride_sharing_requests * n_ride_sharing_requests; i++)
 				dissimilarity.push_back(Consts::max_dissimilarity);
@@ -2231,12 +2238,13 @@ void generate_initial_population(Global_solution& G_best, vector<Global_solution
 	int rnd;
 	for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
 	  Pop.at(particle_index).nume = particle_index;
+				cout<<"\n line \t"<<__LINE__<<endl;
 
 	  for(int line_index=0; line_index<number_of_lines; line_index++){
 		Pop.at(particle_index).L.at(line_index).NV= LIN[line_index].NV;
 		int nbr_stat = LIN[line_index].get_nbr_stat(); // Pop.at(particle_index).L.at(line_index).nbr_stat=LIN[line_index].nbr_stat; change for xiaoyi
 		rnd=rand()%nbr_stat; // generate a random number between(0, nbr_stat-1)
-
+		cout<<"\n line \t"<<__LINE__<<endl;
 		for(int station_index=0; station_index< LIN[line_index].s.size(); station_index++) // change for xiaoyi{
 		{
 			Pop.at(particle_index).L.at(line_index).active[station_index]=LIN[line_index].active[station_index];
@@ -2253,8 +2261,21 @@ void generate_initial_population(Global_solution& G_best, vector<Global_solution
 		Pop.at(particle_index).L.at(line_index).active[rnd]=rand()%2;
 		Pop.at(particle_index).L.at(line_index).Min_NV= Pop.at(particle_index).Generate_NV(line_index, minHT, set_of_stations);
 		Pop.at(particle_index).L.at(line_index).Max_NV= Pop.at(particle_index).Generate_NV(line_index, maxHT, set_of_stations);
-		double rd=rand()%(Pop.at(particle_index).L.at(line_index).Min_NV-Pop.at(particle_index).L.at(line_index).Max_NV)+Pop.at(particle_index).L.at(line_index).Max_NV;
+				cout<<"\n line \t"<<__LINE__<<endl;
+				cout<<"\n Pop.at(particle_index).L.at(line_index).Min_NV \t"<<Pop.at(particle_index).L.at(line_index).Min_NV<<endl;
+				cout<<"\n Pop.at(particle_index).L.at(line_index).Max_NV \t"<<Pop.at(particle_index).L.at(line_index).Max_NV<<endl;
+		int difference = (Pop.at(particle_index).L.at(line_index).Min_NV-Pop.at(particle_index).L.at(line_index).Max_NV);
+		double rd;
+		if(difference ==0){
+			rd= rand()%Pop.at(particle_index).L.at(line_index).Max_NV;
+		}
+		else{
+			rd=rand()%difference+Pop.at(particle_index).L.at(line_index).Max_NV;
+		}
+
 		Pop.at(particle_index).CH[line_index].pos=rnd;
+				cout<<"\n line \t"<<__LINE__<<endl;
+
 		Pop.at(particle_index).CH[line_index].vlr=Pop.at(particle_index).L.at(line_index).active[rnd];
 		Pop.at(particle_index).calculate_frequency(line_index, set_of_stations);
 	  } //end of line index iteration 
@@ -2547,6 +2568,7 @@ void Global_solution::proba(int particle, int line_index, int stop_index, Global
 	double r_1,r_2,d1_1,d1_0,d2_1,d2_0,inertia,V,r;
 	r_1=(rand()%100)*1./100;
     r_2=(rand()%100)*1./100;
+	//check for xiaoyi, check the P_best_[particle].L[line_index].s[stop_index] >=0
     if(P_best_[particle].L[line_index].active[stop_index]==1){
     	d1_1= C_1*r_1;
         d1_0= -C_1*r_1;
@@ -2627,7 +2649,14 @@ void Global_solution::DPSO(int particle_index, const Global_solution& G_best,
 		else{
 			this->L[line_index].Min_NV = this->Generate_NV(line_index,minHT, set_of_stations);
 			this->L[line_index].Max_NV= this->Generate_NV(line_index,maxHT, set_of_stations);
-			double rd=rand()%(this->L[line_index].Min_NV-this->L[line_index].Max_NV )+this->L[line_index].Max_NV;
+			int difference = (this->L[line_index].Min_NV-this->L[line_index].Max_NV);
+			double rd;
+			if(difference ==0){
+				rd= rand()%this->L[line_index].Max_NV;
+			}
+			else{
+				rd=rand()%difference+this->L[line_index].Max_NV;
+			}
 			auxiliary_3[line_index]=rd;
 			}
 		this->L[line_index].NV=auxiliary_3[line_index];
