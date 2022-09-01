@@ -147,27 +147,30 @@ void generation_stops(const vector<line> Line, vector<stop>& set_of_stations){
 	}
 
 	int station_index, line_index, c, d;
-	for(station_index=0; station_index<Number_stations; station_index++){
-		set_of_stations.at(station_index).station=station_index;
+	for(int station_index=0; station_index<Number_stations; station_index++){
+		set_of_stations.at(station_index).station_id=station_index;
 		for(line_index=0; line_index<number_of_lines; line_index++)
 			set_of_stations.at(station_index).EL[line_index]=-1;
 	}
 
 	for(line_index=0; line_index<number_of_lines; line_index++){
 		vector<int> active_staion_ids = Line[line_index].get_active_station_ids();
-		// cout<<"\n line_index \t"<<line_index<<endl;
 		for(int active_staion_id:Line[line_index].get_active_station_ids()){
 			d=0;
 			while(set_of_stations.at(active_staion_id).EL[d]!=-1  && d!=number_of_lines)
 				d++;
 			set_of_stations.at(active_staion_id).EL[d]=line_index;
-			// cout<<"\n active_staion_id \t"<<active_staion_id<<endl;
-			// cout<<"\n set_of_stations.at(c).EL[d] \t"<<line_index<<endl;
 		}
-	}
-	// int i;
-	// for(int i: set_of_stations.at(6).EL){
-	// 	cout<<"\n i \t"<<i<<endl;	}
+	}	
+
+	// for(int i=0; i<set_of_stations.size(); i++){
+	// 	cout<<"\n i \t"<<i<<endl;
+	// 	for(line_index=0; line_index<number_of_lines; line_index++){
+	// 		cout<<"\n line_index \t"<<line_index<<endl;
+	// 		cout<<"\n set_of_stations.at(station_index).EL[line_index] \t"<<set_of_stations.at(i).EL[line_index]<<endl;
+	// 	}
+	// }
+	// exit(0);
 }
 
 // Read information on all station locations:
@@ -507,33 +510,27 @@ float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_o
 		cout<<" \n line \t"<<__LINE__<<endl;
 
 		end_to_end_vec = {station_ids.begin()+first_active_station_index, station_ids.begin()+last_active_station_index+1}; // get the subvector started from the frist active station to the end, it is a mixture of active and deacitve stations
-		cout<<" \n line \t"<<__LINE__<<endl;
-		cout<<"end_to_end_vec.size()"<<end_to_end_vec.size();
+		// cout<<" \n line \t"<<__LINE__<<endl;
+		// cout<<"\n end_to_end_vec.size()"<<end_to_end_vec.size()<<endl;;
+		// cout<<"\n end_to_end_vec.size() line_index \t"<<line_index<<endl;
+
 		// for(int tmp =0; tmp<end_to_end_vec.size(); tmp++){
 		// 	cout<<"\n end_to_end_vec[tmp] \t"<<end_to_end_vec[tmp]<<endl;
 		// }
 		for(int station_index = 0; station_index < end_to_end_vec.size()-1; station_index++){
-			cout<<" \n end_to_end_vec[station_index] \t"<<end_to_end_vec[station_index]<<endl;
+			// cout<<" \n end_to_end_vec[station_index] \t"<<end_to_end_vec[station_index]<<endl;
 			int station_u = end_to_end_vec[station_index];
 			int station_v = end_to_end_vec[station_index+1];
 			const Point p1 = set_of_stations.at(station_u).p;
 			const Point p2 = set_of_stations.at(station_v).p;
 			cum+= (calculateDistance(p1,p2)/PTV_speed)*60; 
-			cout<<"\n (calculateDistance(p1,p2)/PTV_speed)*60 \t"<<calculateDistance(p1,p2)/PTV_speed*60<<endl;
+			// cout<<"\n (calculateDistance(p1,p2)/PTV_speed)*60 \t"<<calculateDistance(p1,p2)/PTV_speed*60<<endl;
 			if(std::count(active_station_ids.begin(), active_station_ids.end(), station_u)) //if the depart station(station u on Arc) is active, add one as accelerating time 
 				cum+=1;
 			if(std::count(active_station_ids.begin(), active_station_ids.end(), station_v))//if the following station(station v on Arc) is active, add one as decelerating time 
 				cum+=1;
 		}
 	}
-
-	// for(ctr=0; ctr<this->L.at(line_index).get_nbr_stat()-1; ctr++){
-		// 	cum_2+=(calculateDistance(
-		// 		set_of_stations.at(this->L[line_index].s[ctr]).p,
-		// 		set_of_stations.at(this->L[line_index].s[ctr+1]).p)/PTV_speed)*60;
-		// 	if(this->L[line_index].active[ctr+1]==1)
-		// 		cum_2+=2;     //if the station is active, we add 1 min of service and 1 min of acceleration and deceleration
-    // }
 	if (Consts::debug_mode){
 		float d_1 = 0;
 		float d_2 = 0;
@@ -549,17 +546,6 @@ float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_o
     return cum;
 }
 
-/****  Calculate number of vehicle on each line according to equation 8: NV= 2*end_to_end_time/ headway_time ****/
-int Global_solution::nbr_Pt_V(int index, int headway_time, const vector<stop>& set_of_stations) const{
-	this->check_consistency();
-	return 2* this->end_to_end_time(index, set_of_stations)/headway_time; 
-}
-
-/****  This function allows you to have the NV output by taking the desired headyway time as input ****/  
-int Global_solution::Generate_NV(int indice_lin, int initial_headway, const vector<stop>& set_of_stations) const{
-	this->check_consistency();
-	return floor(this->nbr_Pt_V(indice_lin, initial_headway, set_of_stations))+1;
-}
 
 /****    Update freq of the lines within the global solution according to equation 1, freq = N_l/(2t_{end to end time}) ****/
 float Global_solution::calculate_frequency(int line_index, const vector<stop>& set_of_stations){	
@@ -572,15 +558,34 @@ float Global_solution::calculate_frequency(int line_index, const vector<stop>& s
 		this->L[line_index].freq=this->L[line_index].NV/(2*this->end_to_end_time(line_index, set_of_stations));
 		cout<<"\n line \t"<<__LINE__<<endl;
 	}
-
 	if(this->L[line_index].freq==0)
 		this->L[line_index].freq=1/MYINFINITY;
 	this->check_consistency();
 	cout<<"\n line \t"<<__LINE__<<endl;
 	cout<<"\n L[line_index].freq \t"<<L[line_index].freq<<endl;
-
 	return this->L[line_index].freq;
 }
+
+/****  calculate the vehicle number on each line by taking the desired headyway time as input, 
+ 		according to equation 8: NV= 2*end_to_end_time/ headway_time ****/  
+int Global_solution::Generate_NV(int line_index, int init_headway_time, const vector<stop>& set_of_stations) const{
+	this->check_consistency();
+	float bus_number = 2* this->end_to_end_time(line_index, set_of_stations)/init_headway_time;
+	int  bus_number_on_each_line  = floor(bus_number)+1;
+	//check for xiaoyi
+	// if(this->headway_time[line_index] > 9998 || end_to_end_time(line_index, set_of_stations) > 9998){
+	// 		cout<<"\n this->L.at(line_index).get_nbr_stat() \t"<<this->L.at(line_index).get_nbr_stat()<<endl;
+	// 		cout<<"\n line index \t"<<line_index<<endl;
+	// 		cout<<"\n this->end_to_end_time(line_index, set_of_stations) \t"<<this->end_to_end_time(line_index, set_of_stations) <<endl;
+	// 		cout<<"\n L[line_index].freq \t"<<this->L[line_index].freq<<endl;
+	// 		cout<<"\n headway_time[line_index] \t"<<this->headway_time[line_index]<<endl;
+	// 		cout<<"\n bus_number_on_each_line \t"<<bus_number_on_each_line<<endl;
+	// 		exit(0)
+	// }
+	return bus_number_on_each_line;
+}
+
+
 
 //update headway time 
 void Global_solution::update_headway_time(const vector<stop>& set_of_stations){
@@ -589,6 +594,13 @@ void Global_solution::update_headway_time(const vector<stop>& set_of_stations){
 		float freq =this->calculate_frequency(line_index, set_of_stations);
 		if (freq ==0){
 			headway_time[line_index]=MYINFINITY;
+			cout<<"\n this->L.at(line_index).get_nbr_stat() \t"<<this->L.at(line_index).get_nbr_stat()<<endl;
+			cout<<"\n line index \t"<<line_index<<endl;
+			cout<<"\n this->end_to_end_time(line_index, set_of_stations) \t"<<this->end_to_end_time(line_index, set_of_stations) <<endl;
+			this->calculate_frequency(line_index,set_of_stations);
+			cout<<"\n L[line_index].freq \t"<<L[line_index].freq <<endl;
+			cout<<"\n headway_time[line_index] \t"<<headway_time[line_index]<<endl;
+			exit(0);
 		}else{
 			headway_time[line_index]=1/freq;
 		}
@@ -623,8 +635,8 @@ bool contains(vector<int> vec, const int & elem)
 	In this->list_of_stations[s][t] we write the sequence of stations visited along the shortest time path from s to t
 	In this->list_of_lines[s][t]  we write the sequence of lines visited along the shortest time path from s to t
 */
-void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<line> LIN_,
-	const vector< vector<float> >& travel_time_on_arc){
+//xiaoyi: remove LIN_ in dijkstra
+void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector<line> LIN_, const vector< vector<float> >& travel_time_on_arc){
 	this->check_consistency();
 	int i, j, line_index, stop_index_1, stop_index_2;
 	vector<StopPoint> V; //a vector of active stops
@@ -632,13 +644,27 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 	vector < vector < float > > disPopulation_sizeT; //the travel time from one stop to get to another stop
 	vector<list <int> > path;
 	path.clear();
+
 	for(line_index=0; line_index<number_of_lines; line_index++){// xiaoyi: change here find all active and add to V
-		line current_line = LIN_.at(line_index);
-		for (int active_station_index: current_line.get_active_station_indices()){
-			StopPoint stop_point(line_index, current_line.s.at(active_station_index));
-			V.push_back(stop_point);
+		line current_line = this->L.at(line_index);
+		cout<<"\n current_line.get_nbr_stat()\t"<<current_line.get_nbr_stat()<<endl;
+		if (current_line.get_nbr_stat() ==0 || current_line.get_nbr_stat() ==1){
+			cout<<"\n get_nbr_stat() ==0 current_line \t"<< line_index ;
 		}
-	}
+		if (current_line.get_nbr_stat() >1){
+			for (int active_station_id: current_line.get_active_station_ids()){
+				StopPoint stop_point(line_index, active_station_id);
+				V.push_back(stop_point);
+			}
+		}
+	}	
+
+	// for(int stop_index_1 =0; stop_index_1<V.size(); stop_index_1++){
+	// 	cout<<"\n V[stop_index_1].line_id \t "<<V[stop_index_1].line_id<<endl;
+	// 	cout<<"\n V[stop_index_1].station_id \t"<<V[stop_index_1].station_id<<endl;
+	// }
+	// exit(0);
+
 
 	//find the possible following stations for each node
 	for(stop_index_1=0; stop_index_1<V.size(); stop_index_1++){
@@ -694,7 +720,17 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 		for (int i = 0; i < V.size(); i++)         //Not yet visited node
 		{	
 			if (V[i].station_id == s){ //the starting station id 
+		
 				d[i] = t_ingress + this->headway_time[V[i].line_id]; //the time to go to transit and headway waiting time
+				if(d[i]>MYINFINITY){
+					cout<<"\n i \t"<<i<<endl;
+					cout<<"\n V[i].station_id \t"<<V[i].station_id<<endl;
+					cout<<"\n V[i].line_id \t"<<V[i].line_id<<endl;
+					cout<<"\n d[i] \t"<<d[i]<<endl;
+					cout<<"\n Line \t"<<__LINE__<<endl;
+					exit(1);
+					// cout<<"end_to_end_time(V[i].line_id, set_of_stations)"<<this->end_to_end_time(V[i].line_id, set_of_stations)<<endl;
+				}
 				pending.insert(i);
 			}
 		}
@@ -712,11 +748,19 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 			}
 			if( u ==-1){
 				for (set<int>::iterator iter=pending.begin(); iter!=pending.end(); iter++){
-					cout<<"\n pending.size()\t"<<endl;
+					cout<<"\n iter \t"<<*iter<<endl;
+					cout<<"\n pending.size() \t"<<pending.size()<<endl;
 					cout<<"\n d[*iter] \t "<<d[*iter]<<endl;
 					cout<<"\n u==-1 line_index"<<V[*iter].line_id<<endl;
-					cout<<"\n headway_time[V[iter].line_index] \t "<<headway_time[V[*iter].line_id]<<endl;
-					cout<<"\n active_station_number \t"<<this->L[line_index].get_nbr_stat()<<"\t"<<endl;
+
+					cout<<"\n u==-1 LIN_.at(line_index).get_nbr_stat() \t"<< LIN_.at(V[*iter].line_id).get_nbr_stat()<<endl;
+					cout<<"this->L.at(V[*iter].line_id).get_nbr_stat()\t"<<this->L.at(V[*iter].line_id).get_nbr_stat()<<endl;
+
+					cout<<"\n u==-1 LIN_.at(V[i].line_id).freq \t"<< LIN_.at(V[*iter].line_id).freq<<endl;
+					cout<<"this->LIN.at(V[*iter].line_id).freq \t"<<this->L.at(V[*iter].line_id).freq<<endl;
+
+					cout<<"end_to_end_time(V[i].line_id, set_of_stations)"<<this->end_to_end_time(V[i].line_id, set_of_stations)<<endl;
+
 				}
 				exit(1);
 			}
@@ -744,13 +788,13 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 
 					if ( this->station_active_on_specific_line( V[*iter].line_id, V[*iter].station_id) == 1)//todo for xiaoyi: this constraint will always true,since all station in V is active
 						travel_time = travel_time + TS;  //TS: time spent by the bus to a stop (min)
-									cout<<"\n line \t"<< __LINE__<<endl;
+									// cout<<"\n line \t"<< __LINE__<<endl;
 
 					travel_time = travel_time + disPopulation_sizeT[u][*iter];
-									cout<<"\n line \t"<< __LINE__<<endl;
+									// cout<<"\n line \t"<< __LINE__<<endl;
 
 					if (d[*iter] > travel_time){
-										cout<<"\n line \t"<< __LINE__<<endl;
+										// cout<<"\n line \t"<< __LINE__<<endl;
 
 						d[*iter] = travel_time;
 						// pred[*iter] = u;
@@ -2942,8 +2986,8 @@ int main(int argc, char *argv[]){
 	Pop.at(0).Initialise_velocity();
 
 	//generate the number of buses on each line
-	for(int l=0; l<number_of_lines; l++){
-		Pop.at(0).L[l].NV = Pop.at(0).Generate_NV(l, Consts::initial_headway, set_of_stations);
+	for(int line_index=0; line_index<number_of_lines; line_index++){
+		Pop.at(0).L[line_index].NV = Pop.at(0).Generate_NV(line_index, Consts::initial_headway, set_of_stations);
 	}
 
 	cout<<"\n Starting -1 iteration of PSO."<<endl;

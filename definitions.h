@@ -164,7 +164,7 @@ struct PointDistance{
 };
 
 struct stop{
-	int station; //station id: from 0 to 63
+	int station_id; //station id: from 0 to 63
 	Point p;
 	int EL[number_of_lines];//Set of station's line, if it is -1 means not on the line
 };

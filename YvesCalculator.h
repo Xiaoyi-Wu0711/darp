@@ -263,11 +263,12 @@ class Global_solution
 	
 	int nbr_Pt_V(int index, int waiting_time, const vector<stop>& set_of_stations) const;
 	
+	float calculate_frequency(int index_line, const vector<stop>& set_of_stations);
+
+
 	int Generate_NV(int indice_lin, int initial_headway, const vector<stop>& set_of_stations) const;
 	
-	
-	float calculate_frequency(int index_line, const vector<stop>& set_of_stations);
-	
+		
 	/**
 	 * Updates the average waiting time for the lines within the global solution
 	 */
