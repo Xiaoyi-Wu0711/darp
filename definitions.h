@@ -3,7 +3,7 @@
 
 #define walk_speed 3     //     1.4 m/s     ==>   5.04 km/H
 //using namespace std;
-#define MYINFINITY 9999 //xiaoyi: change from 9999 to 999999
+#define MYINFINITY 9999
 #define MYINFINITY_2 999999 
 #define t_ingress 2          //time for the passenger to enter to the platform (min)
 #define t_egress 1           //time for the passenger to exit to the platform (min)
@@ -250,13 +250,13 @@ class customer{
 class StopPoint
 {
 public:
-	int station=-1; // station id 
-	int line_index; // lines' list include this station
+	int station_id=-1; // station id 
+	int line_id; // lines' list include this station
 
-	StopPoint(int line_index_, int station_)
+	StopPoint(int line_id_, int station_id_)
 	{
-		this->line_index = line_index_;
-		this->station = station_;
+		this->line_id = line_id_;
+		this->station_id = station_id_;
 	}
 };
 

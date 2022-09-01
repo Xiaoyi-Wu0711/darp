@@ -463,14 +463,8 @@ float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_o
     float cum=0;
 	float cum_2=0;
 
-	// change for xiaoyi
 	vector<int> station_ids = this->L.at(line_index).s;
 	cout<<" \n line \t"<<__LINE__<<"\t line_index \t"<<line_index<<endl;
-
-	for(int tmp = 0; tmp<L.at(line_index).s.size(); tmp++){
-		cout<<"\n L.at(line_index).s[tmp] \t"<<L.at(line_index).s[tmp]<<endl;
-		cout<<"\n L.at(line_index).active[tmp]\t"<<L.at(line_index).active[tmp]<<endl;
-	}	
 
 	vector<int> active_station_ids = this->L.at(line_index).get_active_station_ids();
 	
@@ -478,8 +472,10 @@ float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_o
 	cout<<"\n active_nrb \t"<<active_nrb<<endl;
 
 	if(active_nrb ==0 || active_nrb ==1 ){
-		// cout<<" \n line \t"<<__LINE__<<endl;
-		cum = 9999.99; 
+		if(active_nrb ==1){
+			cout<<"\n active_nrb==1 line_index\t"<<line_index;
+		}
+		cum = MYINFINITY; 
 		// cout<<" \n line \t"<<__LINE__<<endl;
 	}else{
 		cout<<" \n line \t"<<__LINE__<<endl;
@@ -513,9 +509,9 @@ float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_o
 		end_to_end_vec = {station_ids.begin()+first_active_station_index, station_ids.begin()+last_active_station_index+1}; // get the subvector started from the frist active station to the end, it is a mixture of active and deacitve stations
 		cout<<" \n line \t"<<__LINE__<<endl;
 		cout<<"end_to_end_vec.size()"<<end_to_end_vec.size();
-		for(int tmp =0; tmp<end_to_end_vec.size(); tmp++){
-			cout<<"\n end_to_end_vec[tmp] \t"<<end_to_end_vec[tmp]<<endl;
-		}
+		// for(int tmp =0; tmp<end_to_end_vec.size(); tmp++){
+		// 	cout<<"\n end_to_end_vec[tmp] \t"<<end_to_end_vec[tmp]<<endl;
+		// }
 		for(int station_index = 0; station_index < end_to_end_vec.size()-1; station_index++){
 			cout<<" \n end_to_end_vec[station_index] \t"<<end_to_end_vec[station_index]<<endl;
 			int station_u = end_to_end_vec[station_index];
@@ -570,7 +566,7 @@ float Global_solution::calculate_frequency(int line_index, const vector<stop>& s
 	cout<<"\n line_index\t"<<line_index<<endl;
 	cout<<"\n line \t"<<__LINE__<<endl;
 	cout<<"\n L[line_index].NV \t"<<L[line_index].NV<<endl;
-	if(this->end_to_end_time(line_index, set_of_stations)==9999.99){
+	if(this->end_to_end_time(line_index, set_of_stations)>9998){
 		this->L[line_index].freq=1/MYINFINITY;
 	}else{
 		this->L[line_index].freq=this->L[line_index].NV/(2*this->end_to_end_time(line_index, set_of_stations));
@@ -590,10 +586,12 @@ float Global_solution::calculate_frequency(int line_index, const vector<stop>& s
 void Global_solution::update_headway_time(const vector<stop>& set_of_stations){
 	for(int line_index=0; line_index<number_of_lines; line_index++){
 		cout<<"\n line_index \t"<<line_index<<endl;
-		// cout<<"\n calculate_frequency(line_index, set_of_stations)\t"<<this->calculate_frequency(line_index, set_of_stations)<<endl;
-		float tmp = 1/( this->calculate_frequency(line_index, set_of_stations));
-		cout<<"\n tmp \t"<<tmp<<endl;
-		this->headway_time[line_index]= tmp;
+		float freq =this->calculate_frequency(line_index, set_of_stations);
+		if (freq ==0){
+			headway_time[line_index]=MYINFINITY;
+		}else{
+			headway_time[line_index]=1/freq;
+		}
 		cout<<"\n headway_time[line_index] \t"<<headway_time[line_index]<<endl;
 	}
 	this->check_consistency();
@@ -634,36 +632,26 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 	vector < vector < float > > disPopulation_sizeT; //the travel time from one stop to get to another stop
 	vector<list <int> > path;
 	path.clear();
-	for(line_index=0; line_index<number_of_lines; line_index++){//change for xiaoyi: add active or all staions to V?
+	for(line_index=0; line_index<number_of_lines; line_index++){// xiaoyi: change here find all active and add to V
 		line current_line = LIN_.at(line_index);
 		for (int active_station_index: current_line.get_active_station_indices()){
 			StopPoint stop_point(line_index, current_line.s.at(active_station_index));
 			V.push_back(stop_point);
 		}
 	}
-	
-	// cout<<"\n V.size()_1\t "<<V.size()<<endl;
-// 	for(i=0; i<number_of_lines;i++){
-// 	for(int j=0; j< LIN_.at(i).nbr_stat && LIN_.at(i).s.at(j)!=-1; j++)     
-// 	{
-// 		StopPoint a(i, LIN_.at(i).s.at(j));
-// 		V.push_back(a);
-// 	}
-// }
-
 
 	//find the possible following stations for each node
 	for(stop_index_1=0; stop_index_1<V.size(); stop_index_1++){
 		list <int> suc;
-		for(stop_index_2=0; stop_index_2<V.size(); stop_index_2++){
+		for(stop_index_2=0; stop_index_2<V.size(); stop_index_2++)
 			if(	
-				(travel_time_on_arc.at(V.at(stop_index_1).station).at(V.at(stop_index_2).station) != MYINFINITY  &&  
-					V.at(stop_index_1).line_index==V.at(stop_index_2).line_index) ||  // stop_index_2 is the node on the same Arc as stop_index_1
-				(V.at(stop_index_1).station == V.at(stop_index_2).station &&  
-					V.at(stop_index_1).line_index!=V.at(stop_index_2).line_index) // stop_index_2 is stop_index_1's interchange node
-			)
+				(travel_time_on_arc.at(V.at(stop_index_1).station_id).at(V.at(stop_index_2).station_id) != MYINFINITY  &&  
+					V.at(stop_index_1).line_id==V.at(stop_index_2).line_id) ||  // stop_index_2 is the node on the same Arc as stop_index_1
+				(V.at(stop_index_1).station_id == V.at(stop_index_2).station_id &&  
+					V.at(stop_index_1).line_id!=V.at(stop_index_2).line_id) // stop_index_2 is stop_index_1's interchange node
+			){
 				suc.push_back(stop_index_2);
-		}
+			}
 		succ.push_back(suc);
 	}
 
@@ -672,11 +660,11 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 	for(i=0; i<V.size(); i++){
 		vector<float>Ve; //travel time beween any 2 stations from i to j
 		for(j=0; j<V.size(); j++){
-			if(V[i].station==V[j].station && V[i].line_index!=V[j].line_index){ //if the 2 stations have same station id but on different line, they are the interchange stop
-				Ve.push_back(this->headway_time[V[j].line_index]); //the travel time is the headway time
+			if(V[i].station_id==V[j].station_id && V[i].line_id!=V[j].line_id){ //if the 2 stations have same station id but on different line, they are the interchange stop
+				Ve.push_back(this->headway_time[V[j].line_id]); //the travel time is the headway time
 			}else{
-				if(V.at(i).line_index == V.at(j).line_index){//if stations are on same line
-					Ve.push_back(travel_time_on_arc.at(V.at(i).station).at(V.at(j).station)); //the travel time is the travel time on Arc
+				if(V.at(i).line_id == V.at(j).line_id){//if stations are on same line
+					Ve.push_back(travel_time_on_arc.at(V.at(i).station_id).at(V.at(j).station_id)); //the travel time is the travel time on Arc
 				}else
 					Ve.push_back(MYINFINITY);
 			}
@@ -705,8 +693,8 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 
 		for (int i = 0; i < V.size(); i++)         //Not yet visited node
 		{	
-			if (V[i].station == s){ //if the station is the interchange stop
-				d[i] = t_ingress + this->headway_time[V[i].line_index]; //the time to go to transit and headway waiting time
+			if (V[i].station_id == s){ //the starting station id 
+				d[i] = t_ingress + this->headway_time[V[i].line_id]; //the time to go to transit and headway waiting time
 				pending.insert(i);
 			}
 		}
@@ -714,7 +702,7 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 		int k=0,dep;
 		while (!pending.empty()){
 			// search the node u with minimal value d[u] in the pending set
-			best = 999999;
+			best = MYINFINITY;
 			u = -1;
 			for (set<int>::iterator iter=pending.begin(); iter!=pending.end(); iter++){
 				if (d[*iter] < best){
@@ -722,6 +710,17 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 					u = *iter;
 				}
 			}
+			if( u ==-1){
+				for (set<int>::iterator iter=pending.begin(); iter!=pending.end(); iter++){
+					cout<<"\n pending.size()\t"<<endl;
+					cout<<"\n d[*iter] \t "<<d[*iter]<<endl;
+					cout<<"\n u==-1 line_index"<<V[*iter].line_id<<endl;
+					cout<<"\n headway_time[V[iter].line_index] \t "<<headway_time[V[*iter].line_id]<<endl;
+					cout<<"\n active_station_number \t"<<this->L[line_index].get_nbr_stat()<<"\t"<<endl;
+				}
+				exit(1);
+			}
+
 			// retrieve u from the pending set and update the value of the sucessors of u
 			// when the value is updated, the node is added to the set (no impact if it was already in the set)
 			if(k==0) 
@@ -736,14 +735,14 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 				cout<<"\n u \t"<< u<<"\n line\t"<<__LINE__<<endl;
 				cout<<"\n *iter \t"<<*iter<<"\n line\t"<<__LINE__<<endl;
 
-				if(V[u].line_index == V[*iter].line_index){
+				if(V[u].line_id == V[*iter].line_id){
 
 					cout<<"\n line \t"<< __LINE__<<endl;
 
 					float travel_time = d[u];
 					cout<<"\n line \t"<< __LINE__<<endl;
 
-					if ( this->station_active_on_specific_line( V[*iter].line_index, V[*iter].station) == 1)//todo for xiaoyi: this constraint will always true,since all station in V is active
+					if ( this->station_active_on_specific_line( V[*iter].line_id, V[*iter].station_id) == 1)//todo for xiaoyi: this constraint will always true,since all station in V is active
 						travel_time = travel_time + TS;  //TS: time spent by the bus to a stop (min)
 									cout<<"\n line \t"<< __LINE__<<endl;
 
@@ -776,9 +775,9 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 					}
 				}else{ //case transfer from one line to other line 
 					if (	
-						V[u].station==V[*iter].station
-						&& this->station_active_on_specific_line(V[u].line_index, V[u].station) == 1
-						&& station_active_on_specific_line(V[*iter].line_index, V[*iter].station) == 1
+						V[u].station_id==V[*iter].station_id
+						&& this->station_active_on_specific_line(V[u].line_id, V[u].station_id) == 1
+						&& station_active_on_specific_line(V[*iter].line_id, V[*iter].station_id) == 1
 					) //both lines stop at this station
 					{
 						// cout<<"\n line \t"<< __LINE__<<endl;
@@ -825,9 +824,9 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 		// V:set of public transit nodes, i.e., pair (station,line)
 		for (int i = 0; i < V.size(); i++)	//for (int i = 0; i < V.size(); i++)
 		{	
-				if(V[i].station!=s){   
+				if(V[i].station_id!=s){   
 					list<int> P;
-					int t = V[i].station;
+					int t = V[i].station_id;
 					//cout<<"\n"<<DIStance[s][t];
 					if (d[i] + t_egress < this->DIStance.at(s).at(t) ) // distance from s to t (the result of algo ; ‡ initialization ‡ infinity)
 					{   
@@ -844,17 +843,17 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 						u = i;                       
 																		// cout<<"\n u_3 \t"<< u<<endl;
 
-						while (V[u].station != s){
+						while (V[u].station_id != s){
 																		// cout<<"\n line \t"<< __LINE__<<endl;
 
 							P.push_front(u);
-							this->list_of_stations[s][t].push_front(V[u].station);
+							this->list_of_stations[s][t].push_front(V[u].station_id);
 																		// cout<<"\n line \t"<< __LINE__<<endl;
 
-							this->list_of_lines[s][t].push_front(V[u].line_index);
+							this->list_of_lines[s][t].push_front(V[u].line_id);
 																		// cout<<"\n line \t"<< __LINE__<<endl;
 
-							this->set_of_used_lines[s][t].insert(V[u].line_index);
+							this->set_of_used_lines[s][t].insert(V[u].line_id);
 																		// cout<<"\n line \t"<< __LINE__<<endl;
 																		// cout<<"\n pred[u] \t"<< pred[u]<<endl;
 							
@@ -880,8 +879,8 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations,const vector<
 																		// cout<<"\n dep \t"<<dep<<endl;
 																		// cout<<"\n s \t"<<s<<endl;
 
-						cout<<"\n t \t"<<t<<endl;
-						this->list_of_stations[s][t].push_front(V[dep].station);
+						// cout<<"\n t \t"<<t<<endl;
+						this->list_of_stations[s][t].push_front(V[dep].station_id);
 												// cout<<"\n line \t"<< __LINE__<<endl;
 
 					}
