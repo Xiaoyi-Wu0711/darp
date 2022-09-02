@@ -70,6 +70,8 @@ class Consts
 	static const int population_size;
 };
 
+
+
 enum rider_category
 {
 	INVALID=-1, // Invalid

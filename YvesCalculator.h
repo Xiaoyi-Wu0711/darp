@@ -211,9 +211,6 @@ class Global_solution
 
 	// Below is the route, i.e., a sequence of stations
 	list <int> list_of_stations[Number_stations][Number_stations];
-
-	// To know what is the line of the stop list_of_stations[s][t][j]
-	// you can find it in list_of_lines[s][t][j]
 	list <int> list_of_lines[Number_stations][Number_stations];
 	set <int> set_of_used_lines[Number_stations][Number_stations];
 
@@ -254,7 +251,7 @@ class Global_solution
 	/**
 	 * Cette fonnction permet d'identifier le type de customer à partir des deux stations actives les plus proches
 	 */
-	void Customer_category ( int indice_cust);
+	void Customer_category(int indice_cust);
 	
 	void Define_customer_type(int indice_customer, const vector<stop>& set_of_stations);
 	void compteur_2(int iter);

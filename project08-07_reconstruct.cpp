@@ -130,7 +130,6 @@ void load_state(string path, vector<line>& state) {
 		line nl = line(vehicle_number, station_ids, station_states);
 		state.push_back(nl);
 		cout<<endl;
-        cout <<"vehicle_number \t"<<vehicle_number << " \t station_ids.at(0) \t"<< station_ids.at(0) <<" \t station_states.at(2) \t"<< station_states.at(2) <<" \t station_states.at(2) \t"<< active_states << '\n';
 	}
 }
 
@@ -456,7 +455,7 @@ void Global_solution::check_consistency() const
 
 //initial velocity for each line is 0
 void Global_solution::Initialise_velocity(){
-	this->velocity.resize(number_of_lines,0);
+	this->velocity.resize(number_of_lines, 0);
 	this->check_consistency();
 }
 
@@ -571,15 +570,10 @@ float Global_solution::calculate_frequency(int line_index, const vector<stop>& s
 int Global_solution::Generate_NV(int line_index, int init_headway_time, const vector<stop>& set_of_stations) const{
 	this->check_consistency();
 	float bus_number;
-	// if(end_to_end_time(line_index, set_of_stations)>9998){
-	// 	bus_number=MYINFINITY;
-	// }else{
-		// bus_number = 2* this->end_to_end_time(line_index, set_of_stations)/init_headway_time;
-	// }
 	bus_number = 2* this->end_to_end_time(line_index, set_of_stations)/init_headway_time;
-
 	int  bus_number_on_line  = floor(bus_number)+1;
 	cout<<"  bus_number_on_line   "<<bus_number_on_line<<endl;
+	// exit(0);
 	// //check for xiaoyi
 	// if(this->headway_time[line_index] > 9998 || end_to_end_time(line_index, set_of_stations) > 9998){
 	// 		cout<<"\n this->L.at(line_index).get_nbr_stat() \t"<<this->L.at(line_index).get_nbr_stat()<<endl;
@@ -658,6 +652,7 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 		cout<<"\n current_line.get_nbr_stat()\t"<<current_line.get_nbr_stat()<<endl;
 		if (current_line.get_nbr_stat() ==0 || current_line.get_nbr_stat() ==1){
 			cout<<"\n get_nbr_stat() ==0 current_line \t"<< line_index ;
+			// exit(0);
 		}
 		if (current_line.get_nbr_stat() >1){
 			for (int active_station_id: current_line.get_active_station_ids()){
@@ -783,9 +778,9 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 			k++;
 
 			for (list<int>::iterator iter = succ[u].begin(); iter != succ[u].end(); iter++){
-				cout<<"\n line \t"<< __LINE__<<endl;
-				cout<<"\n u \t"<< u<<"\n line\t"<<__LINE__<<endl;
-				cout<<"\n *iter \t"<<*iter<<"\n line\t"<<__LINE__<<endl;
+				// cout<<"\n line \t"<< __LINE__<<endl;
+				// cout<<"\n u \t"<< u<<"\n line\t"<<__LINE__<<endl;
+				// cout<<"\n *iter \t"<<*iter<<"\n line\t"<<__LINE__<<endl;
 
 				if(V[u].line_id == V[*iter].line_id){
 
@@ -2953,25 +2948,29 @@ Global_solution::Global_solution(int number_of_stations_, const vector <customer
 			row.push_back(-1);
 		DIStance.push_back(row);
 	}
-	
+
 	cus = cus_;
 	
 	for (int i=0; i<cus.size(); i++){
 		Category.push_back(cus_.at(i).RT);
 		PT_Estimated_EDT_LAT_To_Station.push_back(-1);
 	}
-	
-	this->L = L_;
+	this -> L = L_;
+	// for(int line_index; line_index<number_of_lines; line_index++){
+	// 	L.at(line_index).s 
+	// }
 	if (Consts::debug_mode) check_consistency();
 }
 
 
 int main(int argc, char *argv[]){
+	
 	if (argc != 5){
 		cout<<"The number of parameters is not correct. You have instead to call the program as"<<endl;
 		cout<<"      <name_of_the_executable> <list_of_customers_file> <locations_file> <discretization_file><solution_file>"<<endl;
 		exit(1);
 	}
+
     string Liste_Of_Customers_file = argv[1];
 	std::string locations_file = argv[2];
 	std::string discretization_info_file = argv[3];
@@ -3002,15 +3001,47 @@ int main(int argc, char *argv[]){
 
 	//calculate the travel time between one station and its following station on arc, other distance is infinity
 	//without add the accelerating and decelerating time
-	const vector< vector<float> > travel_time_on_arc = 
-		initialisation_of_travel_time_on_arc(set_of_stations);
+	const vector< vector<float> > travel_time_on_arc = initialisation_of_travel_time_on_arc(set_of_stations);
 
 	vector<Global_solution> Pop;
 	for(int i=0; i <= Consts::population_size; i++){
 		Global_solution glob_sol(Number_stations, customers_from_file, LIN);
 		Pop.push_back(glob_sol);
-	}// Global_solution initial_solu & = Pop.at(0);
+	}
 
+	if (Pop.size() != Consts::population_size+1){
+			std::stringstream err_msg;
+			err_msg<<"\nLine "<<__LINE__<<": Error: Consts::population_size+1="<<
+				Consts::population_size+1<<". Pop.size()="<< Pop.size() <<endl;
+			cout<<err_msg.str();
+			throw err_msg.str();
+			exit(1);
+	}
+
+	cout<<"\n LINE \t"<<__LINE__<<endl;
+
+	// for(int m; m<number_of_lines; m++){
+	// 	cout<<"\n m \t"<<m<<endl;
+	// 	cout<<"\n LIN[m].get_nbr_stat() \t"<<LIN[m].get_nbr_stat()<<endl;
+	// 	for(int j: LIN[m].get_active_station_ids()){
+	// 		cout<<"\n j \t"<<j<<endl;
+	// 	}
+	// }
+
+	cout<<"\n LINE \t"<<__LINE__<<endl;
+	
+	// for(int i=0; i <= Consts::population_size; i++){
+	// 	cout<<"\n i particle \t"<<i<<endl;
+	// 	for(int m; m<number_of_lines; m++){
+	// 			cout<<"\n m \t"<<m<<endl;
+	// 			cout<<"\n Pop[i].L[m].get_active_station_ids() \t"<<Pop[i].L[m].get_active_station_ids().size()<<endl;
+	// 		for(int j: Pop[i].L[m].get_active_station_ids()){
+	// 			cout<<"\n j \t"<<j<<endl;
+	// 		}
+	// 	}
+	// }	
+	// exit(0);
+	
 	//initialize each line's bus velocity to 0
 	Pop.at(0).Initialise_velocity();
 
@@ -3026,6 +3057,7 @@ int main(int argc, char *argv[]){
 	Pop.at(0).Update_nbr_usrs();//initialize the number of buses on each line to 0
 	
 	cout<<"Pop.at(0).cus.size()\t"<<Pop.at(0).cus.size()<<endl;
+	exit(0);
 	for(int c=0; c<Pop.at(0).cus.size(); c++){
 		Pop.at(0).Customer_category(c);    //based customers' origin/destination to active stations' location to calculate the potential customer type 
 		Pop.at(0).Define_customer_type(c, set_of_stations); //based on the DIStance vector solved by dijkstra, calculate actual customer's type
