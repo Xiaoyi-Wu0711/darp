@@ -16,10 +16,6 @@ If you are running on Mac or Windows, check the equivalent compilation command (
 ## Run
 Example of run command line
 ```
-./idarp.exe Ten_thousand_customers.txt ListeOfLocations_10000_Cust.txt Discretisation_10000_Cust.txt load_file.txt
-
-./idarp.exe one_thousand_cust.txt ListeOfLocations_10000_Cust.txt Discretisation_10000_Cust.txt load_file.txt
-
 ./idarp.exe one_hundred_cust.txt ListeOfLocations_10000_Cust.txt Discretisation_10000_Cust.txt load_file.txt
 
 ./a.exe
