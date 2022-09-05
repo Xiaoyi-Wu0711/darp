@@ -1,7 +1,7 @@
 
 vehicle cost for the global best particle
 
-iter 	 Indice_best 	 TN_Cost 	 PT_Veh 	 RS_Veh 	 headway
+iter 	 Indice_best 	 TN_Cost 	 PT_Veh 	 RS_Veh
 
 -1	0	-1	10297	16
 
