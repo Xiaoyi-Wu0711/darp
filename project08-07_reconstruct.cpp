@@ -72,7 +72,7 @@ const int Consts::initial_PT_vehicle_number = 50;  // initial bus number on each
 const float Consts::circuity_factor = 1.0; // the time used by ridersharing
 
 const int Consts::max_dissimilarity = 10000.0;
-const bool Consts::debug_mode = false;
+const bool Consts::debug_mode = true;
 const int Consts::seed = 3;
 const int Consts::vehicle_speed = 30;
 const int Consts::initial_headway = 2; // initial headway 
@@ -92,12 +92,10 @@ void load_state(string path, vector<line>& state) {
     string l;
     ifstream readFile(path);
     while (getline(readFile, l)) {
-		// vehicle_number
-		// cout << "\nLine "<<__LINE__<<endl;
 
 		size_t pos = l.find(';');
 		if (pos == -1) break;
-		cout << pos;
+		// cout << pos;
 		int vehicle_number = std::stoi( l.substr(0, pos) );
 		l = l.substr(pos+1);
 
@@ -125,11 +123,9 @@ void load_state(string path, vector<line>& state) {
 		// number of active states
 		pos = l.find(';');
 		int active_states = std::stoi( l.substr(0, pos) );
-		cout<<"LINE: "<<__LINE__<<endl;
 
 		line nl = line(vehicle_number, station_ids, station_states);
 		state.push_back(nl);
-		cout<<endl;
 	}
 }
 
@@ -146,7 +142,15 @@ void generation_stops(const vector<line> Line, vector<stop>& set_of_stations){
 	}
 
 	int station_index, line_index, c, d;
+
 	for(int station_index=0; station_index<Number_stations; station_index++){
+		if (Consts::debug_mode){
+			if (station_index >= set_of_stations.size()){
+				cout<<"\n Line:"<<__LINE__<<": Error: trying to access a="<<station_index<<
+					", while set_of_stations.size()="<<set_of_stations.size()<<endl;
+				exit(0);
+			}
+		}
 		set_of_stations.at(station_index).station_id=station_index;
 		for(line_index=0; line_index<number_of_lines; line_index++)
 			set_of_stations.at(station_index).EL[line_index]=-1;
@@ -161,12 +165,13 @@ void generation_stops(const vector<line> Line, vector<stop>& set_of_stations){
 			set_of_stations.at(active_staion_id).EL[d]=line_index;
 		}
 	}	
-
 	// for(int i=0; i<set_of_stations.size(); i++){
 	// 	cout<<"\n i \t"<<i<<endl;
 	// 	for(line_index=0; line_index<number_of_lines; line_index++){
+	// 		cout<<"--------------"<<endl;
 	// 		cout<<"\n line_index \t"<<line_index<<endl;
 	// 		cout<<"\n set_of_stations.at(station_index).EL[line_index] \t"<<set_of_stations.at(i).EL[line_index]<<endl;
+	// 		cout<<"--------------"<<endl;
 	// 	}
 	// }
 	// exit(0);
@@ -175,7 +180,7 @@ void generation_stops(const vector<line> Line, vector<stop>& set_of_stations){
 // Read information on all station locations:
 void read_data_stations(int index_network, vector<stop>& set_of_stations, std::string stations_file){
 
-	int k=0;
+	int station_index=0;
 	ifstream infile;
 	infile.open(stations_file);
 	if(infile.fail()){
@@ -184,13 +189,13 @@ void read_data_stations(int index_network, vector<stop>& set_of_stations, std::s
 	}
 	int id; double lon; double lat;; double x_coord; double y_coord; int x_discr; int y_discr; int key_loc_discr;
 	while (infile >> id >> lat >> lon >> x_coord >> y_coord >> x_discr >> y_discr >> key_loc_discr){
-		set_of_stations[k].p.indx=id;
-		set_of_stations[k].p.lat=lat;
-		set_of_stations[k].p.lon=lon;
-		set_of_stations[k].p.x=x_coord;
-		set_of_stations[k].p.y=y_coord;
-		set_of_stations[k].p.Identif=key_loc_discr;
-		k++;
+		set_of_stations[station_index].p.indx=id;
+		set_of_stations[station_index].p.lat=lat;
+		set_of_stations[station_index].p.lon=lon;
+		set_of_stations[station_index].p.x=x_coord;
+		set_of_stations[station_index].p.y=y_coord;
+		set_of_stations[station_index].p.Identif=key_loc_discr;
+		station_index++;
 	}
 	if (Consts::debug_mode){
 		if (set_of_stations.size() != Number_stations){
@@ -217,6 +222,7 @@ vector <customer> read_customers_from_file(const string Liste_Of_Customers_file)
 	float latitude_orig, longitude_orig, latitude_dest, longitude_dest;
 	double x_coord_orig, y_coord_orig, Identif_orig, x_coord_dest, y_coord_dest, Identif_dest;
 	int Id, EDT, LAT, orig_loc, dest_loc;
+
 	while(infile >> Id >> latitude_orig >> longitude_orig >> x_coord_orig >> y_coord_orig >> Identif_orig >> latitude_dest >> longitude_dest >> x_coord_dest >> y_coord_dest >> Identif_dest >> EDT >> LAT >> orig_loc >> dest_loc ){
 		customer Cs;
 		Cs.indxe=Id;
@@ -243,13 +249,15 @@ vector <customer> read_customers_from_file(const string Liste_Of_Customers_file)
 	return cus;
 }
 
+//distance = sin^2((point_1.lat-point_2.lat)*pi/180)/2)+cos(dlat)
+//check here: https://www.movable-type.co.uk/scripts/latlong.html
 float calculateDistance(const Point point_1, const Point point_2){
 	double dlat1=point_1.lat*(PI/180);
 	double dlong1=point_1.lon*(PI/180);
 	double dlat2=point_2.lat*(PI/180);
 	double dlong2=point_2.lon*(PI/180);
-	double dLong=dlong1-dlong2;
-	double dLat=dlat1-dlat2;
+	double dLong=(point_1.lon-point_2.lon)*(PI/180);
+	double dLat=(point_1.lat-point_2.lat)*(PI/180);
 	double aHarv= pow(sin(dLat/2.0),2.0)+cos(dlat1)*cos(dlat2)*pow(sin(dLong/2),2);
 	double cHarv=2*atan2(sqrt(aHarv),sqrt(1.0-aHarv));
 	float distance=6372*cHarv;        //earth_radius = 6372.795477598
@@ -264,7 +272,6 @@ bool DistanceMore(const PointDistance& lhs, const PointDistance& rhs){
 //calculate the distance between each customer's origin/destionation and each station 
 void Customer_LastMile_FirstMile (vector <customer> &cus, const vector<stop>& set_of_stations){
 	int customer_index;
-
 	for(customer_index=0; customer_index<cus.size(); customer_index++){
 		// calculate the first mile distance
 		for (int station_index = 0; station_index < Number_stations; station_index++){
@@ -274,7 +281,11 @@ void Customer_LastMile_FirstMile (vector <customer> &cus, const vector<stop>& se
 		    cus[customer_index].FM.push_back(pd);
 		}
 		std::sort(cus[customer_index].FM.begin(), cus[customer_index].FM.end(), DistanceMore);
-        
+
+        // cout<<cus[customer_index].FM[0].pt.indx<<endl;
+		// cout<<cus[customer_index].FM[62].pt.indx<<endl;
+		// exit(0);
+
         //calculate the last mile distance
 		for (int station_index = 0; station_index < Number_stations; station_index++){
 			PointDistance pd2;
@@ -291,11 +302,17 @@ void Customer_LastMile_FirstMile (vector <customer> &cus, const vector<stop>& se
 				exit(0);
 			}
 		}
+
+		// cout<<cus[customer_index].LM[0].pt.indx<<endl;
+		// cout<<cus[customer_index].LM[62].pt.indx<<endl;
+		// exit(0);
+
 	}
 }
 
 
 // initialize the network with 100 customer and 63 stops+1 depot locations
+// customer_test.txt ListeOfLocations_10000_Cust.txt
 void Network::read_data_network(std::string locations_file, std::string stations_file){
 
 	ifstream infile;
@@ -304,12 +321,15 @@ void Network::read_data_network(std::string locations_file, std::string stations
 		cout << "\n failed to read the locations_file"<<locations_file<<endl;
 		exit(EXIT_FAILURE);
 	}
-
+	
+	//ListeofLocatios_10000_Cust with 1714 customer locations and 63 station locations 
 	infile >> n_cust_locations >> n_stations;
+
 	cout<<"n_cust_locations "<<n_cust_locations<<endl;
 	cout<<"n_stations "<< n_stations<<endl;
 
 	n_used_locations = n_cust_locations + n_stations + 1;
+
 	for (int i=0; i<n_used_locations+1; i++){
 		Location loc;
 		locations.push_back(loc);
@@ -335,7 +355,6 @@ void Network::read_data_network(std::string locations_file, std::string stations
 	}
 	infile.close();
 
-	cout<<"\n  map_key_to_location.at(0+100) \t"<< map_key_to_location.at(0+100)<<endl;
 
 
 	// Depot location:
@@ -348,6 +367,7 @@ void Network::read_data_network(std::string locations_file, std::string stations
 	locations.at(counter)=depot_loc;
 	assert(locations.at(n_cust_locations).type.compare("depot")==0 );//verification
 
+	//stations_file with loc of 63 stations
 	infile.open(stations_file);
 	if(infile.fail()){
 		cout << "failed to read the stations_file!";
@@ -363,25 +383,15 @@ void Network::read_data_network(std::string locations_file, std::string stations
 		locations.at(stat_idx)=station_loc;
 		counter += 1;
 		map_key_to_location.at(key_loc_discr) = counter;
-
-
 	}
 	infile.close();
 	cout<<"\n  map_key_to_location.at(0+100+1) \t"<< map_key_to_location.at(0+1715+1)<<endl;
-
-	// if (Consts::debug_mode){
-	// 	if (map_key_to_location.at(16427) != -1 || map_key_to_location.at(n_cust_locations+n_stations)  < 0){
-	// 		cout<<"\nLine "<<__LINE__<<": Error: n_ride_sharing_requests="<<n_ride_sharing_requests<<
-	// 			" and n_nodes="<<n_nodes<<endl;
-	// 		exit(0);
-	// 	}
-	// }
 
 	// cout<<"\n number_of_possible_locations= "<<number_of_possible_locations<<endl;
 	// cout<<"\n map_key_to_location.at(key_loc_discr)= "<<map_key_to_location.at(16427)<<endl;
 }
 
-// calculate the travel time between any location in the network(including 63 stations, customer, i depot)
+// calculate the travel time between n_used_location in the network(including 63 stations, customer, i depot) by private car
 void Network::compute_time_matrix(double circuity_factor, double delta_x, double delta_y){
 	//todo for xiaoyi
 	for (int loc1 = 0; loc1 < n_used_locations; loc1++)
@@ -391,12 +401,25 @@ void Network::compute_time_matrix(double circuity_factor, double delta_x, double
 	// Compute all travel times based on the coordinates:
 	for (int loc1 = 0; loc1 < n_used_locations; loc1++){
 		for (int loc2 = 0; loc2 <= n_used_locations; loc2++){
+
+			if (Consts::debug_mode){
+				if (loc1 >= locations.size() || loc2>=locations.size()){
+					cout<<"\n Line "<<__LINE__<<": Try to access loc1="<<loc1<<
+						" and loc2="<<loc2<<", but location.size()="<<locations.size()
+						<<endl;
+					exit(0);
+				}
+			}
+
 			double travel_time =
 					sqrt(pow(delta_x*(locations.at(loc1).x_coord - locations.at(loc2).x_coord),2) + pow(delta_y*(locations.at(loc1).y_coord - locations.at(loc2).y_coord),2));
 			travel_time = travel_time * circuity_factor*60*1./Consts::vehicle_speed;		// Note: the assumed speed is now 60 km/u
 			// cout<<"\n Line "<<__LINE__<<": travel_time1="<<travel_time<<endl;
 			time_matrix.at(loc1 * n_used_locations + loc2) = travel_time;
 			time_matrix.at(loc2 * n_used_locations + loc1) = travel_time;
+			// cout<<"time_matrx\t"<<time_matrix.size()<<endl;
+			// exit(0);
+		
 		}
 	}
 
@@ -419,21 +442,25 @@ void initialize_network(Network &n, const std::string locations_file, std::strin
 //travel time between 2 active stations(next to each other) on the same line, according to middle part of the equation 1
 //if 2 stations are not on the same line or one of them are deactive, it would be infinity
 vector< vector<float> > initialisation_of_travel_time_on_arc(const vector<stop>& set_of_stations){
+	
 	assert(Number_stations == set_of_stations.size() );
 	vector< vector<float> > Travel_time_on_arc;
-	int s_1,s_2,l;
-	for(s_1=0; s_1<Number_stations; s_1++){
+
+	for(int s_1=0; s_1<Number_stations; s_1++){
 		vector<float> vec;
-		for(s_2=0; s_2<Number_stations; s_2++){
+		for(int s_2=0; s_2<Number_stations; s_2++)
 			vec.push_back(MYINFINITY); //aa: This replaces J[s][cn]=MYINFINITY;
-		}
 		Travel_time_on_arc.push_back(vec);
 	}
-	for(l=0; l<number_of_lines; l++){
-		vector<int> active_station_ids = LIN.at(l).get_active_station_ids();
+
+	for(int l=0; l<number_of_lines; l++){
+		vector<int> active_station_ids;
+		for (int i:LIN[l].get_active_station_ids()){
+			active_station_ids.push_back(i);
+		}
 
 		for (int active_station_index=0; active_station_index<active_station_ids.size()-1;active_station_index++) {
-			//change for xiaoyi
+
 			int active_station_id = active_station_ids.at(active_station_index);
 			int next_active_station_id = active_station_ids.at(active_station_index+1);
 
@@ -445,13 +472,95 @@ vector< vector<float> > initialisation_of_travel_time_on_arc(const vector<stop>&
 			Travel_time_on_arc.at(next_active_station_id).at(active_station_id)=
 					Travel_time_on_arc.at(active_station_id).at(next_active_station_id);
 			// } else break; 
+			// cout<<Travel_time_on_arc[1][2]<<endl;
+			// cout<<Travel_time_on_arc[1][3]<<endl;
+
+			// exit(0);
+
 		}
 	}
 	return Travel_time_on_arc;
 }//initialisation_of_travel_time_on_arc
 
+
 void Global_solution::check_consistency() const
-{ } //Glob
+{
+		if (Consts::debug_mode)
+		{
+			if (number_of_stations < 2)
+			{
+				std::stringstream err_msg;
+				err_msg<<"\nLine "<<__LINE__<<": Error: number_of_stations="<<number_of_stations
+					<<". They seem to be too few. Are you sure it is not an error?"<<endl;
+				cout<<err_msg.str();
+				throw err_msg.str();
+			}
+					
+			
+			if (L.size() != number_of_lines)
+			{
+				std::stringstream err_msg;
+				err_msg<<"\nLine "<<__LINE__<<": Error: lines.size()="<<L.size()
+					<<" and number_of_liness="<<number_of_lines<<": they should instead be "
+					<<"the same"<<endl;
+				cout<<err_msg.str();
+				throw err_msg;
+			}
+
+			if (number_of_stations != Number_stations)
+			{
+				std::stringstream err_msg;
+				err_msg<<"\nLine "<<__LINE__<<": Error: Number_stations="<<Number_stations
+					<<" and number_of_stations="<<number_of_stations<<": they should instead be "
+					<<"the same"<<endl;
+				cout<<err_msg.str();
+				throw err_msg;
+			}
+
+			if (DIStance.size()!=number_of_stations)
+			{
+				std::stringstream err_msg;
+				err_msg<<"\nLine "<<__LINE__<<": Error: DIStance.size()="<<DIStance.size()
+					<<" and number_of_stations="<<number_of_stations<<": they should instead be "
+					<<"the same"<<endl;
+				cout<<err_msg.str();
+				throw err_msg;
+			}
+
+			for (int i=0; i<DIStance.size(); i++)
+			{
+				vector<float> row = DIStance.at(i);
+				if (row.size()!=number_of_stations)
+				{
+					std::stringstream err_msg;
+					err_msg<<"\nLine "<<__LINE__<<": Error: When we take the row corresponding to all the "
+						<<"distances from station "<<i<<", we see that row.size()="<<row.size()
+						<<" and number_of_stations="<<number_of_stations<<": they should instead be "
+						<<"the same"<<endl;
+					cout<<err_msg.str();
+					throw err_msg;
+				}
+			}
+
+			/*		for (int i=0; i<cus.size(); i++)
+					{   cout<<" category("<<i<<")="<<this->Category.at(i)<<"    RT="<<this->cus.at(i).RT;
+						if (this->cus.at(i).RT != this->Category.at(i) )
+						{
+							std::stringstream err_msg;
+							err_msg<<"\n Line "<<__LINE__<<": cus.at("<<i<<").RT="<<this->cus.at(i).RT
+								<<" Category(i)="<< this->Category.at(i)<<". They should instead be the same"<<endl;
+							cout<<err_msg.str();
+							throw err_msg;
+						}
+
+					}
+
+					}*/
+
+					//TODO aa: pour moi meme if the error above is never raised, then we can remove Category
+		}
+} //Global_solution::check_consistency()
+
 
 //initial velocity for each line is 0
 void Global_solution::Initialise_velocity(){
@@ -461,26 +570,28 @@ void Global_solution::Initialise_velocity(){
 
 // This function return the travel time from the first active station to last active station on line
 float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_of_stations) const{
-	int ctr;
+
     float cum=0;
 	float cum_2=0;
 
 	vector<int> station_ids = this->L.at(line_index).s;
-	cout<<" \n line \t"<<__LINE__<<"\t line_index \t"<<line_index<<endl;
 
-	vector<int> active_station_ids = this->L.at(line_index).get_active_station_ids();
+	vector<int> active_station_ids;
 	
-	int active_nrb = active_station_ids.size();
-	cout<<"\n active_nrb \t"<<active_nrb<<endl;
+	for(int i:this->L.at(line_index).get_active_station_ids()){
+		active_station_ids.push_back(i);
+		cout<<"\n i \t"<<i<<endl;
+	}
 
+	int active_nrb=L.at(line_index).get_nbr_stat();
+
+	cout<<"\n active_nrb \t"<<active_nrb<<endl;
 	if(active_nrb ==0 || active_nrb ==1 ){
 		if(active_nrb ==1){
 			cout<<"\n active_nrb==1 line_index\t"<<line_index;
 		}
 		cum = MYINFINITY; 
-		// cout<<" \n line \t"<<__LINE__<<endl;
 	}else{
-		cout<<" \n line \t"<<__LINE__<<endl;
 
 		int first_active_station_id = active_station_ids[0];
 		int first_active_station_index = 0;
@@ -506,7 +617,6 @@ float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_o
 
 		vector<int> end_to_end_vec;
 
-		cout<<" \n line \t"<<__LINE__<<endl;
 
 		end_to_end_vec = {station_ids.begin()+first_active_station_index, station_ids.begin()+last_active_station_index+1}; // get the subvector started from the frist active station to the end, it is a mixture of active and deacitve stations
 		// cout<<" \n line \t"<<__LINE__<<endl;
@@ -517,7 +627,7 @@ float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_o
 		// 	cout<<"\n end_to_end_vec[tmp] \t"<<end_to_end_vec[tmp]<<endl;
 		// }
 		for(int station_index = 0; station_index < end_to_end_vec.size()-1; station_index++){
-			// cout<<" \n end_to_end_vec[station_index] \t"<<end_to_end_vec[station_index]<<endl;
+			// cout<<"---------------"<<endl;
 			int station_u = end_to_end_vec[station_index];
 			int station_v = end_to_end_vec[station_index+1];
 			const Point p1 = set_of_stations.at(station_u).p;
@@ -528,20 +638,16 @@ float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_o
 				cum+=1;
 			if(std::count(active_station_ids.begin(), active_station_ids.end(), station_v))//if the following station(station v on Arc) is active, add one as decelerating time 
 				cum+=1;
+			// cout<<"\n cum \t"<<cum<<endl;
+			// cout<<"---------------"<<endl;
+
 		}
-	}
-	if (Consts::debug_mode){
-		float d_1 = 0;
-		float d_2 = 0;
-		d_1= calculateDistance(set_of_stations.at(6).p, set_of_stations.at(44).p);
-		d_2= calculateDistance(set_of_stations.at(32).p, set_of_stations.at(56).p)+calculateDistance(set_of_stations.at(56).p, set_of_stations.at(44).p)
-			+calculateDistance(set_of_stations.at(44).p, set_of_stations.at(60).p);
-		cout<<"\n distance + suppossed accelerrating/ declerating time should equals to cum for the line 7: \n"; 
-		cout<<"\n check: cum \t"<<cum<<"\t d_2 \t"<<d_2<<endl; 
 	}
 	
     this->check_consistency();
 	cout<<"\n cum \t"<<cum<<endl;
+	// exit(0);
+
     return cum;
 }
 
@@ -567,10 +673,10 @@ float Global_solution::calculate_frequency(int line_index, const vector<stop>& s
 
 /****  calculate the vehicle number on each line by taking the desired headyway time as input, 
  		according to equation 8: NV= 2*end_to_end_time/ headway_time ****/  
-int Global_solution::Generate_NV(int line_index, int init_headway_time, const vector<stop>& set_of_stations) const{
+int Global_solution::Generate_NV(int line_index, int headway_time_for_each_line, const vector<stop>& set_of_stations) const{
 	this->check_consistency();
 	float bus_number;
-	bus_number = 2* this->end_to_end_time(line_index, set_of_stations)/init_headway_time;
+	bus_number = 2* this->end_to_end_time(line_index, set_of_stations)/headway_time_for_each_line;
 	int  bus_number_on_line  = floor(bus_number)+1;
 	cout<<"  bus_number_on_line   "<<bus_number_on_line<<endl;
 	// exit(0);
@@ -586,6 +692,7 @@ int Global_solution::Generate_NV(int line_index, int init_headway_time, const ve
 	// }
 	return bus_number_on_line;
 }
+
 
 
 
@@ -662,11 +769,6 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 		}
 	}	
 
-	// for(int stop_index_1 =0; stop_index_1<V.size(); stop_index_1++){
-	// 	cout<<"\n V[stop_index_1].line_id \t "<<V[stop_index_1].line_id<<endl;
-	// 	cout<<"\n V[stop_index_1].station_id \t"<<V[stop_index_1].station_id<<endl;
-	// }
-	// exit(0);
 
 
 	//find the possible following stations for each node
@@ -712,7 +814,6 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 		float best,travel_time=0;
 		d.resize(V.size());
 		pred.resize(V.size());
-		cout<<"\n V.size() \t"<< V.size()<<"\n line\t"<<__LINE__<<endl;
 		
 		for (int i = 0; i < V.size(); i++)
 			d[i] = MYINFINITY;  					//Initiatization to the MYINFINITY
@@ -772,7 +873,6 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 			// when the value is updated, the node is added to the set (no impact if it was already in the set)
 			if(k==0) 
 				dep=u;
-			cout<<"\n line \t"<< __LINE__<<endl;
 
 			pending.erase(u);
 			k++;
@@ -784,7 +884,6 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 
 				if(V[u].line_id == V[*iter].line_id){
 
-					cout<<"\n line \t"<< __LINE__<<endl;
 
 					float travel_time = d[u];
 					cout<<"\n line \t"<< __LINE__<<endl;
@@ -871,6 +970,8 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 		// V:set of public transit nodes, i.e., pair (station,line)
 		for (int i = 0; i < V.size(); i++)	//for (int i = 0; i < V.size(); i++)
 		{	
+
+
 				if(V[i].station_id!=s){   
 					list<int> P;
 					int t = V[i].station_id;
@@ -903,11 +1004,16 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 							this->set_of_used_lines[s][t].insert(V[u].line_id);
 																		// cout<<"\n line \t"<< __LINE__<<endl;
 																		// cout<<"\n pred[u] \t"<< pred[u]<<endl;
-							
+															cout<<"\n line \t"<< __LINE__<<endl;
+
 														
 							if(u<pred.size()){
 								u = pred[u];	
+																cout<<"\n line \t"<< __LINE__<<endl;
+
 							}else{
+																cout<<"\n line \t"<< __LINE__<<endl;
+
 								for(int tmp=0; tmp<pred.size(); tmp++){
 									cout<<"\n line\t"<<__LINE__<<endl;
 									cout<<"\n pred[tmp]_3 \t"<<pred[tmp]<<endl;
@@ -916,6 +1022,7 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 								cout<<"\n i \t"<<i<<endl;
 								cout<<"\n v.size() \t"<<V.size()<<endl;
 								cout<<"\n u_3 \t"<<u<<endl;
+								cout<<"warning in line "<<__LINE__<<endl;
 								exit(1);
 							}
 						}
@@ -928,17 +1035,10 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 
 						// cout<<"\n t \t"<<t<<endl;
 						this->list_of_stations[s][t].push_front(V[dep].station_id);
-												// cout<<"\n line \t"<< __LINE__<<endl;
-
 					}
-								// cout<<"\n line \t"<< __LINE__<<endl;
-
 					path.push_back(P);
 				}
 			}	
-
-
-									// cout<<"\n line \t"<< __LINE__<<endl;
 
 	}
 	this->check_consistency();
@@ -2950,15 +3050,15 @@ Global_solution::Global_solution(int number_of_stations_, const vector <customer
 	}
 
 	cus = cus_;
-	
 	for (int i=0; i<cus.size(); i++){
 		Category.push_back(cus_.at(i).RT);
 		PT_Estimated_EDT_LAT_To_Station.push_back(-1);
 	}
 	this -> L = L_;
-	// for(int line_index; line_index<number_of_lines; line_index++){
-	// 	L.at(line_index).s 
-	// }
+		
+		// cout<<"line  \t"<<L.at(0).s.size()<<endl;
+		// cout<<"line \t"<<L.at(0).s[0]<<endl;
+			
 	if (Consts::debug_mode) check_consistency();
 }
 
@@ -2987,7 +3087,9 @@ int main(int argc, char *argv[]){
 
     vector<stop> set_of_stations(Number_stations);
 	generation_stops(LIN, set_of_stations);//update set of stations with station ids and lines allocated to 
+
 	read_data_stations(0, set_of_stations, Consts::stations_file); //update set of stations with id and loc
+		
 
     vector <customer> customers_from_file = read_customers_from_file(Liste_Of_Customers_file); 
 
@@ -2995,10 +3097,14 @@ int main(int argc, char *argv[]){
 
     DiscretizationHandler discretizationHandler(discretization_info_file);
 	
+	read_data_stations(0, set_of_stations, Consts::stations_file); //update set of stations with id and loc
+
 	//initialize the network with each customer's loc + 63 stops's loc + 1 depot loc and calculated their travel time matrix
 	//time to depot is always 0
+	//todo for xiaoyi: understanding the functionality of this function
     initialize_network(n, locations_file, Consts::stations_file, discretizationHandler);
 
+	// exit(0);
 	//calculate the travel time between one station and its following station on arc, other distance is infinity
 	//without add the accelerating and decelerating time
 	const vector< vector<float> > travel_time_on_arc = initialisation_of_travel_time_on_arc(set_of_stations);
@@ -3007,7 +3113,13 @@ int main(int argc, char *argv[]){
 	for(int i=0; i <= Consts::population_size; i++){
 		Global_solution glob_sol(Number_stations, customers_from_file, LIN);
 		Pop.push_back(glob_sol);
+		// cout<<" \n i \t"<<i<<endl;
+		// for(int j: Pop[i].L[1].get_active_station_ids()){
+		// 	cout<<j<<endl;
+		// exit(0);
+		// }
 	}
+
 
 	if (Pop.size() != Consts::population_size+1){
 			std::stringstream err_msg;
@@ -3018,29 +3130,6 @@ int main(int argc, char *argv[]){
 			exit(1);
 	}
 
-	cout<<"\n LINE \t"<<__LINE__<<endl;
-
-	// for(int m; m<number_of_lines; m++){
-	// 	cout<<"\n m \t"<<m<<endl;
-	// 	cout<<"\n LIN[m].get_nbr_stat() \t"<<LIN[m].get_nbr_stat()<<endl;
-	// 	for(int j: LIN[m].get_active_station_ids()){
-	// 		cout<<"\n j \t"<<j<<endl;
-	// 	}
-	// }
-
-	cout<<"\n LINE \t"<<__LINE__<<endl;
-	
-	// for(int i=0; i <= Consts::population_size; i++){
-	// 	cout<<"\n i particle \t"<<i<<endl;
-	// 	for(int m; m<number_of_lines; m++){
-	// 			cout<<"\n m \t"<<m<<endl;
-	// 			cout<<"\n Pop[i].L[m].get_active_station_ids() \t"<<Pop[i].L[m].get_active_station_ids().size()<<endl;
-	// 		for(int j: Pop[i].L[m].get_active_station_ids()){
-	// 			cout<<"\n j \t"<<j<<endl;
-	// 		}
-	// 	}
-	// }	
-	// exit(0);
 	
 	//initialize each line's bus velocity to 0
 	Pop.at(0).Initialise_velocity();
@@ -3054,10 +3143,21 @@ int main(int argc, char *argv[]){
 
 	Pop.at(0).dijkstra(set_of_stations, Pop.at(0).L, travel_time_on_arc);//calculate the shortest path from station to stations based on particle 0 solution, and store in list_of_Station, list_of_lines
 
+
+
+	for(int stop_index_1 :Pop.at(0).list_of_stations[1][63]){
+		cout<<"Pop.at(0).list_of_stations[1][12]   "<<stop_index_1<<endl;
+	}
+	for(int stop_index_1 :Pop.at(0).list_of_lines[1][63]){
+		cout<<"Pop.at(0).list_of_lines[1][12]   "<<stop_index_1<<endl;
+	}
+	exit(0);
+
+
 	Pop.at(0).Update_nbr_usrs();//initialize the number of buses on each line to 0
 	
 	cout<<"Pop.at(0).cus.size()\t"<<Pop.at(0).cus.size()<<endl;
-	exit(0);
+	// exit(0);
 	for(int c=0; c<Pop.at(0).cus.size(); c++){
 		Pop.at(0).Customer_category(c);    //based customers' origin/destination to active stations' location to calculate the potential customer type 
 		Pop.at(0).Define_customer_type(c, set_of_stations); //based on the DIStance vector solved by dijkstra, calculate actual customer's type
