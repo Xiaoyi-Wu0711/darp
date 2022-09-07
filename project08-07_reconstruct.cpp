@@ -472,12 +472,9 @@ vector< vector<float> > initialisation_of_travel_time_on_arc(const vector<stop>&
 			Travel_time_on_arc.at(next_active_station_id).at(active_station_id)=
 					Travel_time_on_arc.at(active_station_id).at(next_active_station_id);
 			// } else break; 
-			// cout<<Travel_time_on_arc[1][2]<<endl;
-			// cout<<Travel_time_on_arc[1][3]<<endl;
-
-			// exit(0);
 
 		}
+
 	}
 	return Travel_time_on_arc;
 }//initialisation_of_travel_time_on_arc
@@ -580,7 +577,6 @@ float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_o
 	
 	for(int i:this->L.at(line_index).get_active_station_ids()){
 		active_station_ids.push_back(i);
-		cout<<"\n i \t"<<i<<endl;
 	}
 
 	int active_nrb=L.at(line_index).get_nbr_stat();
@@ -646,7 +642,6 @@ float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_o
 	
     this->check_consistency();
 	cout<<"\n cum \t"<<cum<<endl;
-	// exit(0);
 
     return cum;
 }
@@ -678,7 +673,6 @@ int Global_solution::Generate_NV(int line_index, int headway_time_for_each_line,
 	float bus_number;
 	bus_number = 2* this->end_to_end_time(line_index, set_of_stations)/headway_time_for_each_line;
 	int  bus_number_on_line  = floor(bus_number)+1;
-	cout<<"  bus_number_on_line   "<<bus_number_on_line<<endl;
 	// exit(0);
 	// //check for xiaoyi
 	// if(this->headway_time[line_index] > 9998 || end_to_end_time(line_index, set_of_stations) > 9998){
@@ -747,39 +741,56 @@ bool contains(vector<int> vec, const int & elem)
 //xiaoyi: remove LIN_ in dijkstra
 void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector<line> LIN_, const vector< vector<float> >& travel_time_on_arc){
 	this->check_consistency();
-	int i, j, line_index, stop_index_1, stop_index_2;
 	vector<StopPoint> V; //a vector of active stops
 	vector< list <int> > succ;	//succ: all possible following stations
 	vector < vector < float > > disPopulation_sizeT; //the travel time from one stop to get to another stop
 	vector<list <int> > path;
 	path.clear();
 
-	for(line_index=0; line_index<number_of_lines; line_index++){// xiaoyi: change here find all active and add to V
-		line current_line = this->L.at(line_index);
+	int count=0;
+
+	for(int line_index=0; line_index<number_of_lines; line_index++){// xiaoyi: change here find all active and add to V
+		line current_line = LIN_.at(line_index);
 		cout<<"\n current_line.get_nbr_stat()\t"<<current_line.get_nbr_stat()<<endl;
 		if (current_line.get_nbr_stat() ==0 || current_line.get_nbr_stat() ==1){
 			cout<<"\n get_nbr_stat() ==0 current_line \t"<< line_index ;
-			// exit(0);
 		}
 		if (current_line.get_nbr_stat() >1){
 			for (int active_station_id: current_line.get_active_station_ids()){
 				StopPoint stop_point(line_index, active_station_id);
 				V.push_back(stop_point);
-			}
+				// cout<<"active_station_id \t"<<active_station_id<<endl;
+				// cout<<"count"<<count<<endl;
+				// cout<<"stop_point.station_id \t"<<stop_point.station_id<<endl;
+				// count+=1;
+				}
+
 		}
 	}	
 
+	// cout<<"count  "<<count<<endl;
+	// int tmp = ((travel_time_on_arc.at(V.at(36).station_id).at(V.at(44).station_id) != MYINFINITY)  &&  
+	// 				(V.at(36).line_id==V.at(43).line_id)) ||  // 44 is the node on the same Arc as 36
+	// 			((V.at(36).station_id == V.at(43).station_id) &&  
+	// 				(V.at(36).line_id!=V.at(43).line_id)) ;
 
+	// cout<<"V.at(36).station_id"<<V.at(36).station_id<<endl;
+	// cout<<"V.at(43).station_id"<<V.at(43).station_id<<endl;
+
+	// cout<<travel_time_on_arc.at(V.at(36).station_id).at(V.at(43).station_id)<<endl;
+	// cout<<tmp<<endl;
+
+	// exit(0);
 
 	//find the possible following stations for each node
-	for(stop_index_1=0; stop_index_1<V.size(); stop_index_1++){
+	for(int stop_index_1=0; stop_index_1<V.size(); stop_index_1++){
 		list <int> suc;
-		for(stop_index_2=0; stop_index_2<V.size(); stop_index_2++)
+		for(int stop_index_2=0; stop_index_2<V.size(); stop_index_2++)
 			if(	
-				(travel_time_on_arc.at(V.at(stop_index_1).station_id).at(V.at(stop_index_2).station_id) != MYINFINITY  &&  
-					V.at(stop_index_1).line_id==V.at(stop_index_2).line_id) ||  // stop_index_2 is the node on the same Arc as stop_index_1
-				(V.at(stop_index_1).station_id == V.at(stop_index_2).station_id &&  
-					V.at(stop_index_1).line_id!=V.at(stop_index_2).line_id) // stop_index_2 is stop_index_1's interchange node
+				((travel_time_on_arc.at(V.at(stop_index_1).station_id).at(V.at(stop_index_2).station_id) != MYINFINITY)  &&  
+					(V.at(stop_index_1).line_id==V.at(stop_index_2).line_id)) ||  // stop_index_2 is the node on the same Arc as stop_index_1
+				((V.at(stop_index_1).station_id == V.at(stop_index_2).station_id) &&  
+					(V.at(stop_index_1).line_id!=V.at(stop_index_2).line_id)) // stop_index_2 is stop_index_1's interchange node
 			){
 				suc.push_back(stop_index_2);
 			}
@@ -788,9 +799,9 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 
 	this->update_headway_time(set_of_stations);
 
-	for(i=0; i<V.size(); i++){
+	for(int i=0; i<V.size(); i++){
 		vector<float>Ve; //travel time beween any 2 stations from i to j
-		for(j=0; j<V.size(); j++){
+		for(int j=0; j<V.size(); j++){
 			if(V[i].station_id==V[j].station_id && V[i].line_id!=V[j].line_id){ //if the 2 stations have same station id but on different line, they are the interchange stop
 				Ve.push_back(this->headway_time[V[j].line_id]); //the travel time is the headway time
 			}else{
@@ -807,7 +818,7 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 	// s:departing station
 	for(int s=0; s<Number_stations; s++){
 		cout<<"\n s \t"<<s<<endl;
-		vector<float> d; // label for each node of the graph, the shortest distance between source to any pending node 
+		vector<float> d; // weight of each frontier each node of the graph, the shortest distance between source to any pending node 
 		vector<int> pred; // predecessor for each node of the road network graph (in the shortest paths)
 		set<int> pending; // set of pending nodes, one hop candidate set 
 		int u;
@@ -818,20 +829,38 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 		for (int i = 0; i < V.size(); i++)
 			d[i] = MYINFINITY;  					//Initiatization to the MYINFINITY
 
-		for(int cn=0; cn<Number_stations;cn++)     // arrive at cn
+		for(int cn=0; cn<Number_stations;cn++) {   // arrive at cn
+			if (Consts::debug_mode){
+				this->check_consistency();
+				if (s >= this->DIStance.size() ){
+					cout<<"\nLine "<<__LINE__<<": Error: trying to access station s="
+						<< s <<" while this->DIStance.size()="<<
+						this->DIStance.size()<<endl;
+					exit(0);
+				}
+
+				if (cn >= this->DIStance.at(s).size() ){
+					cout<<"\nLine "<<__LINE__<<": Error: trying to access station cn="
+						<< s <<" while this->DIStance.at(s).size()="<<
+						this->DIStance.at(cn).size()<<endl;
+					exit(0);
+				}
+			}//end debug
+
 			this->DIStance.at(s).at(cn)=MYINFINITY; // Matrix of size Number_stations x Number_stations, It is the distance between any pair of stations(km)
+		}
 
 		for (int i = 0; i < V.size(); i++)         //Not yet visited node
 		{	
-			if (V[i].station_id == s){ //the starting station id 
+			if (V[i].station_id == s){ //the starting station id as pending node
 				d[i] = t_ingress + this->headway_time[V[i].line_id]; //the time to go to transit and headway waiting time
-				if(d[i]>MYINFINITY){
+				if(this->headway_time[V[i].line_id]>MYINFINITY-1){
 					cout<<"\n i \t"<<i<<endl;
 					cout<<"\n V[i].station_id \t"<<V[i].station_id<<endl;
 					cout<<"\n V[i].line_id \t"<<V[i].line_id<<endl;
 					cout<<"\n d[i] \t"<<d[i]<<endl;
 					cout<<"\n Line \t"<<__LINE__<<endl;
-					cout<<"\n warning: d[i]>MYINFINITY!!!"<<endl;
+					cout<<"\n warning: d[i]>MYINFINITY!!!"<<"  line   "<<__LINE__<<endl;
 					exit(1);
 					// cout<<"end_to_end_time(V[i].line_id, set_of_stations)"<<this->end_to_end_time(V[i].line_id, set_of_stations)<<endl;
 				}
@@ -845,29 +874,35 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 			best = MYINFINITY;
 			u = -1;
 			for (set<int>::iterator iter=pending.begin(); iter!=pending.end(); iter++){
+				// cout<<"d[*iter]"<<d[*iter]<<endl;
+				// cout<<"v[*iter].staion_id<"<<V[*iter].station_id<<endl;
+				// cout<<"headway_time[3]<"<<headway_time[3]<<endl;
+				// cout<<"headway_time[4]<"<<headway_time[4]<<endl;
 				if (d[*iter] < best){
 					best = d[*iter];
 					u = *iter;
 				}
 			}
-			// if( u ==-1){
-			// 	for (set<int>::iterator iter=pending.begin(); iter!=pending.end(); iter++){
-			// 		cout<<"\n iter \t"<<*iter<<endl;
-			// 		cout<<"\n pending.size() \t"<<pending.size()<<endl;
-			// 		cout<<"\n d[*iter] \t "<<d[*iter]<<endl;
-			// 		cout<<"\n u==-1 line_index"<<V[*iter].line_id<<endl;
+			
 
-			// 		cout<<"\n u==-1 LIN_.at(line_index).get_nbr_stat() \t"<< LIN_.at(V[*iter].line_id).get_nbr_stat()<<endl;
-			// 		cout<<"this->L.at(V[*iter].line_id).get_nbr_stat()\t"<<this->L.at(V[*iter].line_id).get_nbr_stat()<<endl;
+			if( u ==-1){
+				for (set<int>::iterator iter=pending.begin(); iter!=pending.end(); iter++){
 
-			// 		cout<<"\n u==-1 LIN_.at(V[i].line_id).freq \t"<< LIN_.at(V[*iter].line_id).freq<<endl;
-			// 		cout<<"this->LIN.at(V[*iter].line_id).freq \t"<<this->L.at(V[*iter].line_id).freq<<endl;
+					cout<<"\n iter \t"<<*iter<<endl;
+					cout<<"\n pending.size() \t"<<pending.size()<<endl;
+					cout<<"\n d[*iter] \t "<<d[*iter]<<endl;
+					cout<<"\n u==-1 line_index"<<V[*iter].line_id<<endl;
 
-			// 		cout<<"end_to_end_time(V[i].line_id, set_of_stations)"<<this->end_to_end_time(V[i].line_id, set_of_stations)<<endl;
+					cout<<"\n u==-1 LIN_.at(line_index).get_nbr_stat() \t"<< LIN_.at(V[*iter].line_id).get_nbr_stat()<<endl;
+					cout<<"this->L.at(V[*iter].line_id).get_nbr_stat()\t"<<this->L.at(V[*iter].line_id).get_nbr_stat()<<endl;
 
-			// 	}
-			// 	exit(1);
-			// }
+					cout<<"\n u==-1 LIN_.at(V[i].line_id).freq \t"<< LIN_.at(V[*iter].line_id).freq<<endl;
+					cout<<"this->LIN.at(V[*iter].line_id).freq \t"<<this->L.at(V[*iter].line_id).freq<<endl;
+
+				}
+				cout<<"\n warning: d[i]>MYINFINITY!!!"<<"  line   "<<__LINE__<<endl;
+				exit(1);
+			}
 
 			// retrieve u from the pending set and update the value of the sucessors of u
 			// when the value is updated, the node is added to the set (no impact if it was already in the set)
@@ -879,166 +914,110 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations, const vector
 
 			for (list<int>::iterator iter = succ[u].begin(); iter != succ[u].end(); iter++){
 				// cout<<"\n line \t"<< __LINE__<<endl;
-				// cout<<"\n u \t"<< u<<"\n line\t"<<__LINE__<<endl;
-				// cout<<"\n *iter \t"<<*iter<<"\n line\t"<<__LINE__<<endl;
+				// cout<<"\n V[u].station_id \t"<<V[u].station_id<<endl;
+				// cout<<"\n *V[*iter].station_id \t"<<V[*iter].station_id<<endl;
+				// cout<<" V[*iter].line_id  "<< V[*iter].line_id<<endl;
+				// cout<<" V[u].line_id "<< V[u].line_id<<endl;
+					if(V[u].line_id == V[*iter].line_id){
+						float travel_time = d[u];//travel time with predecessor nodes
+						cout<<"travel_time \t "<<travel_time<<endl;
+						if ( this->station_active_on_specific_line( V[*iter].line_id, V[*iter].station_id) == 1)//todo for xiaoyi: this constraint will always true,since all station in V is active
+							travel_time = travel_time + TS;  //TS =10 is the time spent by the bus to a stop (min)
+						else{
+							cout<<"\n BUG in station_active_on_specific_line function with LINE"<<__LINE__<<endl;
+							exit(1);
+						}
+						travel_time = travel_time + disPopulation_sizeT[u][*iter];
 
-				if(V[u].line_id == V[*iter].line_id){
-
-
-					float travel_time = d[u];
-					cout<<"\n line \t"<< __LINE__<<endl;
-
-					if ( this->station_active_on_specific_line( V[*iter].line_id, V[*iter].station_id) == 1)//todo for xiaoyi: this constraint will always true,since all station in V is active
-						travel_time = travel_time + TS;  //TS: time spent by the bus to a stop (min)
-									// cout<<"\n line \t"<< __LINE__<<endl;
-
-					travel_time = travel_time + disPopulation_sizeT[u][*iter];
-									// cout<<"\n line \t"<< __LINE__<<endl;
-
-					if (d[*iter] > travel_time){
-										// cout<<"\n line \t"<< __LINE__<<endl;
-
-						d[*iter] = travel_time;
-						// pred[*iter] = u;
-					
-					if(*iter<pred.size()){
-						pred[*iter] = u;
-							}else{
-								for(int tmp=0; tmp<pred.size(); tmp++){
-									cout<<"\n line\t"<<__LINE__<<endl;
-									cout<<"\n pred[tmp]_1 \t"<<pred[tmp]<<endl;
-								}
-								cout<<"\n pred.size() \t"<<pred.size()<<endl;
-								cout<<"\n i \t"<<i<<endl;
-								cout<<"\n iter \t"<<*iter<<endl;
-								cout<<"\n v.size() \t"<<V.size()<<endl;
-								cout<<"\n u_1 \t"<<u<<endl;
-								exit(1);
-							}
-						pending.insert(*iter); ///no risk of duplication: set does not generate duplicates
-						// cout<<"\n line \t"<< __LINE__<<endl;
-
-					}
-				}else{ //case transfer from one line to other line 
-					if (	
-						V[u].station_id==V[*iter].station_id
-						&& this->station_active_on_specific_line(V[u].line_id, V[u].station_id) == 1
-						&& station_active_on_specific_line(V[*iter].line_id, V[*iter].station_id) == 1
-					) //both lines stop at this station
-					{
-						// cout<<"\n line \t"<< __LINE__<<endl;
-
-						if (d[*iter] > d[u] + disPopulation_sizeT[u][*iter]){
-											cout<<"\n line \t"<< __LINE__<<endl;
-
-							d[*iter] = d[u] + disPopulation_sizeT[u][*iter];
-							pred[*iter] = u;
-							if(*iter<pred.size()){
-								pred[*iter] = u;
-							}else{
-								for(int tmp=0; tmp<pred.size(); tmp++){
-									cout<<"\n line\t"<<__LINE__<<endl;
-									cout<<"\n pred[tmp]_2 \t"<<pred[tmp]<<endl;
-								}
-								cout<<"\n pred.size() \t"<<pred.size()<<endl;
-								cout<<"\n i \t"<<i<<endl;
-								cout<<"\n iter \t"<<*iter<<endl;
-								cout<<"\n v.size() \t"<<V.size()<<endl;
-								cout<<"\n u_2 \t"<<u<<endl;
-								exit(1);
-							}
-						// try{
-						// 	pred[*iter] = u;
-						// 	// throw 100;
-						// }
-						// catch(std::exception& e){
-						// 	for(int i=0; i<pred.size(); i++){
-						// 		cout<<"\n pred[i]_2 \t"<<pred[i]<<endl;
-						// 	}
-						// 	cout<<"\n u_2 \t"<<u<<endl;
-						// }
-							pending.insert(*iter); //no risk of duplication: set does not generate duplicates
+						if (d[*iter] > travel_time){ //if the value in pending nodes is higher, update the value in pending nodes
+							d[*iter] = travel_time;
+							pred[*iter] = u; //upadte the existing node with u 
+							pending.insert(*iter); //pas de risque de duplication : set ne gÈnËre pas de doublons
 						}
 					}
+					else{ //case transfer from one line to other line 
+						if (	
+							V[u].station_id==V[*iter].station_id
+							&& this->station_active_on_specific_line(V[u].line_id, V[u].station_id) == 1
+							&& station_active_on_specific_line(V[*iter].line_id, V[*iter].station_id) == 1
+						){
+							if (d[*iter] > d[u] + disPopulation_sizeT[u][*iter]){
+								d[*iter] = d[u] + disPopulation_sizeT[u][*iter];
+								pred[*iter] = u;
+								pending.insert(*iter); //no risk of duplication: set does not generate duplicates
+							}
+						}
 				}
 			}
 		}
 
-					cout<<"\n line \t"<< __LINE__<<endl;
 
-		//cout<<"\n d[12]="<<d[12];end
-		// V:set of public transit nodes, i.e., pair (station,line)
-		for (int i = 0; i < V.size(); i++)	//for (int i = 0; i < V.size(); i++)
-		{	
+		for (int i = 0; i < V.size(); i++){	
+			if(V[i].station_id!=s){   
+				list<int> P;
+				int t = V[i].station_id;
+				//cout<<"\n"<<DIStance[s][t];
+				if (d[i] + t_egress < this->DIStance.at(s).at(t) ) // distance from s to t (the result of algo ; ‡ initialization ‡ infinity)
+				{   
+					this->DIStance.at(s).at(t) = d[i]+t_egress;
+					// compute and save the associated path
+					//path[s][t].clear();
+					P.clear();
 
+					// With the two lines above we reset the public transit routes from the origin to
+					// the destination
+					this->list_of_stations[s][t].clear(); //s:departing_station; t:arrival_station
+					this->set_of_used_lines[s][t].clear();
+					this->list_of_lines[s][t].clear();
+					u = i;                       
+																	// cout<<"\n u_3 \t"<< u<<endl;
 
-				if(V[i].station_id!=s){   
-					list<int> P;
-					int t = V[i].station_id;
-					//cout<<"\n"<<DIStance[s][t];
-					if (d[i] + t_egress < this->DIStance.at(s).at(t) ) // distance from s to t (the result of algo ; ‡ initialization ‡ infinity)
-					{   
-						this->DIStance.at(s).at(t) = d[i]+t_egress;
-						// compute and save the associated path
-						//path[s][t].clear();
-						P.clear();
+					while (V[u].station_id != s){
+																	// cout<<"\n line \t"<< __LINE__<<endl;
 
-						// With the two lines above we reset the public transit routes from the origin to
-						// the destination
-						this->list_of_stations[s][t].clear(); //s:departing_station; t:arrival_station
-						this->set_of_used_lines[s][t].clear();
-						this->list_of_lines[s][t].clear();
-						u = i;                       
-																		// cout<<"\n u_3 \t"<< u<<endl;
+						P.push_front(u);
+						this->list_of_stations[s][t].push_front(V[u].station_id);
+																	// cout<<"\n line \t"<< __LINE__<<endl;
 
+						this->list_of_lines[s][t].push_front(V[u].line_id);
+																	// cout<<"\n line \t"<< __LINE__<<endl;
+
+						this->set_of_used_lines[s][t].insert(V[u].line_id);
+																	// cout<<"\n line \t"<< __LINE__<<endl;
+																	// cout<<"\n pred[u] \t"<< pred[u]<<endl;
+														cout<<"\n line \t"<< __LINE__<<endl;
+
+													
+						u = i;
 						while (V[u].station_id != s){
-																		// cout<<"\n line \t"<< __LINE__<<endl;
+																					cout<<"\n line \t"<< __LINE__<<endl;
 
 							P.push_front(u);
 							this->list_of_stations[s][t].push_front(V[u].station_id);
-																		// cout<<"\n line \t"<< __LINE__<<endl;
-
 							this->list_of_lines[s][t].push_front(V[u].line_id);
-																		// cout<<"\n line \t"<< __LINE__<<endl;
-
 							this->set_of_used_lines[s][t].insert(V[u].line_id);
-																		// cout<<"\n line \t"<< __LINE__<<endl;
-																		// cout<<"\n pred[u] \t"<< pred[u]<<endl;
-															cout<<"\n line \t"<< __LINE__<<endl;
-
-														
-							if(u<pred.size()){
-								u = pred[u];	
-																cout<<"\n line \t"<< __LINE__<<endl;
-
-							}else{
-																cout<<"\n line \t"<< __LINE__<<endl;
-
-								for(int tmp=0; tmp<pred.size(); tmp++){
-									cout<<"\n line\t"<<__LINE__<<endl;
-									cout<<"\n pred[tmp]_3 \t"<<pred[tmp]<<endl;
-								}
-								cout<<"\n pred.size() \t"<<pred.size()<<endl;
-								cout<<"\n i \t"<<i<<endl;
-								cout<<"\n v.size() \t"<<V.size()<<endl;
-								cout<<"\n u_3 \t"<<u<<endl;
-								cout<<"warning in line "<<__LINE__<<endl;
-								exit(1);
-							}
+							u = pred[u];
 						}
-																		// cout<<"\n line \t"<< __LINE__<<endl;
-
 						P.push_front(dep);
-																		// cout<<"\n line \t"<< __LINE__<<endl;
-																		// cout<<"\n dep \t"<<dep<<endl;
-																		// cout<<"\n s \t"<<s<<endl;
+																				cout<<"\n line \t"<< __LINE__<<endl;
 
-						// cout<<"\n t \t"<<t<<endl;
 						this->list_of_stations[s][t].push_front(V[dep].station_id);
 					}
-					path.push_back(P);
+																	cout<<"\n line \t"<< __LINE__<<endl;
+
+					P.push_front(dep);
+																	cout<<"\n line \t"<< __LINE__<<endl;
+																	// cout<<"\n dep \t"<<dep<<endl;
+																	// cout<<"\n s \t"<<s<<endl;
+					this->list_of_stations[s][t].push_front(V[dep].station_id);
+																			cout<<"\n line \t"<< __LINE__<<endl;
+
 				}
-			}	
+				path.push_back(P);
+																		cout<<"\n line \t"<< __LINE__<<endl;
+
+			}
+		}	
 
 	}
 	this->check_consistency();
@@ -3104,11 +3083,14 @@ int main(int argc, char *argv[]){
 	//todo for xiaoyi: understanding the functionality of this function
     initialize_network(n, locations_file, Consts::stations_file, discretizationHandler);
 
-	// exit(0);
 	//calculate the travel time between one station and its following station on arc, other distance is infinity
 	//without add the accelerating and decelerating time
 	const vector< vector<float> > travel_time_on_arc = initialisation_of_travel_time_on_arc(set_of_stations);
 
+	// cout<<"travel_time_on_arc[37][38]"<<travel_time_on_arc[37][38]<<endl;
+	// // cout<<Travel_time_on_arc[1][3]<<endl;
+
+	// exit(0);
 	vector<Global_solution> Pop;
 	for(int i=0; i <= Consts::population_size; i++){
 		Global_solution glob_sol(Number_stations, customers_from_file, LIN);
@@ -3144,13 +3126,17 @@ int main(int argc, char *argv[]){
 	Pop.at(0).dijkstra(set_of_stations, Pop.at(0).L, travel_time_on_arc);//calculate the shortest path from station to stations based on particle 0 solution, and store in list_of_Station, list_of_lines
 
 
-
-	for(int stop_index_1 :Pop.at(0).list_of_stations[1][63]){
+	for(int stop_index_1 :Pop.at(0).list_of_stations[1][61]){
 		cout<<"Pop.at(0).list_of_stations[1][12]   "<<stop_index_1<<endl;
 	}
-	for(int stop_index_1 :Pop.at(0).list_of_lines[1][63]){
+
+
+	for(int stop_index_1 :Pop.at(0).list_of_lines[1][12]){
 		cout<<"Pop.at(0).list_of_lines[1][12]   "<<stop_index_1<<endl;
 	}
+
+
+
 	exit(0);
 
 
