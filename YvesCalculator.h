@@ -245,7 +245,8 @@ class Global_solution
 	 * Returns 1 if station stn is activated, 0 otherwise
 	 */
 	int station_active_on_any_line(int stn) const;
-	
+	int Detecte_station_state(int l, int stn) const;
+
 	int station_active_on_specific_line(int l, int stn) const;
 	
 	/**
