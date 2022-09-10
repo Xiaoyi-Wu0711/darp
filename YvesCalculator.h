@@ -175,6 +175,8 @@ class Global_solution
 	vector<line> L; 
 	float G[number_of_lines][Number_stations][Number_stations];
 	float headway_time[number_of_lines];          // we store the AWTs according to the frequencies
+	float waiting_time[number_of_lines];          // we store the AWTs according to the frequencies
+
 	Evl obj;
 	int nk=-1;
 	chang CH[number_of_lines]; // dynamic array 
@@ -272,7 +274,7 @@ class Global_solution
 	 */
 	void update_headway_time(const vector<stop>& set_of_stations);
 	
-	void dijkstra(const vector<stop>& set_of_stations,const vector<line> LIN_,
+	void dijkstra(const vector<stop>& set_of_stations,
 			const vector< vector<float> >& travel_time_between_stations);
 	
 	void DPSO(int nm, const Global_solution& G_best, const vector<Global_solution>& P_best_,

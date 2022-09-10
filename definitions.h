@@ -7,7 +7,7 @@
 #define MYINFINITY_2 999999 
 #define t_ingress 2          //time for the passenger to enter to the platform (min)
 #define t_egress 1           //time for the passenger to exit to the platform (min)
-#define TS 10        //time spent by the bus to a stop (min)
+#define TS 2        //time spent by the bus to a stop (min)
 #define PTV_speed 60   //Public transit speed
 #define RSV_speed 30   //Ride sharing vehicle speed
 #define Number_stations 63      // Number of stations
