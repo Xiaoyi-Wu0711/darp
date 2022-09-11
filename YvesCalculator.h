@@ -176,6 +176,7 @@ class Global_solution
 	float G[number_of_lines][Number_stations][Number_stations];
 	float headway_time[number_of_lines];          // we store the AWTs according to the frequencies
 	float waiting_time[number_of_lines];          // we store the AWTs according to the frequencies
+	vector< vector<float> > travel_time_on_arc;
 
 	Evl obj;
 	int nk=-1;
@@ -225,8 +226,8 @@ class Global_solution
 	
 	
 	vector <customer> cus; 
-	// cus is an attribute of GlobalSolution. By doing so,
-	// every GlobalSolution can be optimized in parallel, each with 
+	// cus is an attribute of Global Solution. By doing so,
+	// every Global Solution can be optimized in parallel, each with 
 	// its own customer statistics.
 
 
@@ -263,19 +264,17 @@ class Global_solution
 	
 	int nbr_Pt_V(int index, int waiting_time, const vector<stop>& set_of_stations) const;
 	
-	float calculate_frequency(int index_line, const vector<stop>& set_of_stations);
+	void calculate_frequency(int index_line, const vector<stop>& set_of_stations);
 
 
 	int Generate_NV(int indice_lin, int initial_headway, const vector<stop>& set_of_stations) const;
 	
-		
-	/**
-	 * Updates the average waiting time for the lines within the global solution
-	 */
-	void update_headway_time(const vector<stop>& set_of_stations);
 	
-	void dijkstra(const vector<stop>& set_of_stations,
-			const vector< vector<float> >& travel_time_between_stations);
+	// Updates the average waiting time for the lines within the global solution
+	void update_headway_time(const vector<stop>& set_of_stations);
+	void update_travel_time_on_arc(const vector<stop>& set_of_stations);
+
+	void dijkstra(const vector<stop>& set_of_stations);
 	
 	void DPSO(int nm, const Global_solution& G_best, const vector<Global_solution>& P_best_,
 		const vector<stop>& set_of_stations, float CR1, double CR2, double CR3);

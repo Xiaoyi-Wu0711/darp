@@ -3,8 +3,8 @@ vehicle cost for the global best particle
 
 iter 	 Indice_best 	 TN_Cost 	 PT_Veh 	 RS_Veh 	 headway
 
--1	0	-1	372	8
+-1	0	667	332	3
 
--1	0	-1	372	8
+-1	0	667	332	3
 
-0	0	-1	372	8
+0	3	527	258	11

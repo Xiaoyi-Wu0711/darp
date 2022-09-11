@@ -1,8 +1,8 @@
 
  iter 	 index 	 Average Travel Time
 
--1	0	0
+-1	0	38.2559
 
--1	00
+-1	038.2559
 
-0	00
+0	331.8908
