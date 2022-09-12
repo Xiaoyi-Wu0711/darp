@@ -177,7 +177,6 @@ class Global_solution
 	float headway_time[number_of_lines];          // we store the AWTs according to the frequencies
 	float waiting_time[number_of_lines];          // we store the AWTs according to the frequencies
 	vector< vector<float> > travel_time_on_arc;
-
 	Evl obj;
 	int nk=-1;
 	chang CH[number_of_lines]; // dynamic array 
@@ -271,7 +270,7 @@ class Global_solution
 	
 	
 	// Updates the average waiting time for the lines within the global solution
-	void update_headway_time(const vector<stop>& set_of_stations);
+	void update_waiting_time(const vector<stop>& set_of_stations);
 	void update_travel_time_on_arc(const vector<stop>& set_of_stations);
 
 	void dijkstra(const vector<stop>& set_of_stations);
