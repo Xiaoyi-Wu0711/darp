@@ -81,12 +81,8 @@ const int Consts::max_line_stations = 18;
 
 //PSO parameters, particle number
 const int Consts::population_size=10;
-float WaitingTime[PSO_Numbe_Iteration][number_of_lines];
-int ActivStat[PSO_Numbe_Iteration][number_of_lines]; //change for xiaoyi: change to G_best.L[i].get_nbr_stat()
-int TypeRider[PSO_Numbe_Iteration][4];        // We have four types of riders
-int TypeRider2[PSO_Numbe_Iteration][4];   
+  
 vector<line> LIN;
-
 
 void load_state(string path, vector<line>& state) {
     string l;
@@ -129,66 +125,30 @@ void load_state(string path, vector<line>& state) {
 	}
 }
 
-//update set_of_station and generate 63 stations with their station id 
-void generation_stops(const vector<line> Line, vector<stop>& set_of_stations){
-	if (Consts::debug_mode){
-		if (Line.size() != number_of_lines)
-		{std::stringstream err_msg;
-			err_msg<<"\nLine "<<__LINE__<<": Error: number_of_lines="<<number_of_lines<<
-				", Line.size()="<<Line.size()<<endl;
-			cout<<err_msg.str();
-			throw err_msg.str();
-		}
-	}
 
-	int c, d;
+// Read information on 63 station locations:
+void read_data_stations(const vector<line> Ln, vector<stop>& set_of_stations, std::string stations_file){
 
-	for(int station_index=0; station_index<Number_stations; station_index++){
+	for(int station_index_1=0; station_index_1<Number_stations; station_index_1++){
 		if (Consts::debug_mode){
-			if (station_index >= set_of_stations.size()){
-				cout<<"\n Line:"<<__LINE__<<": Error: trying to access a="<<station_index<<
+			if (station_index_1 >= set_of_stations.size()){
+				cout<<"\n Line:"<<__LINE__<<": Error: trying to access a="<<station_index_1<<
 					", while set_of_stations.size()="<<set_of_stations.size()<<endl;
 				exit(0);
 			}
 		}
-		
-		set_of_stations.at(station_index).station_id=station_index;
-		for(int line_index=0; line_index<number_of_lines; line_index++)
-			set_of_stations.at(station_index).EL[line_index]=-1;
+		set_of_stations.at(station_index_1).station_id=station_index_1;
 	}
+	// cout<<"\n line "<<__LINE__<<endl;
 
-	for(int line_index=0; line_index<number_of_lines; line_index++){
-
-		for(int active_station_id:Line[line_index].get_active_station_ids()){
-			d=0;
-			while(set_of_stations.at(active_station_id).EL[d]!=-1  && d!=number_of_lines)
-				d++;
-			set_of_stations.at(active_station_id).EL[d]=line_index;
-		}
-	}	
-	// for(int i=0; i<set_of_stations.size(); i++){
-	// 	cout<<"\n i \t"<<i<<endl;
-	// 	for(line_index=0; line_index<number_of_lines; line_index++){
-	// 		cout<<"--------------"<<endl;
-	// 		cout<<"\n line_index \t"<<line_index<<endl;
-	// 		cout<<"\n set_of_stations.at(station_index).EL[line_index] \t"<<set_of_stations.at(i).EL[line_index]<<endl;
-	// 		cout<<"--------------"<<endl;
-	// 	}
-	// }
-	// exit(0);
-}
-
-// Read information on all station locations:
-void read_data_stations(int index_network, vector<stop>& set_of_stations, std::string stations_file){
-
-	int station_index=0;
 	ifstream infile;
 	infile.open(stations_file);
 	if(infile.fail()){
 		cout << "\n failed to read the stations_file \t"<<stations_file<<endl;
 		exit(EXIT_FAILURE);
 	}
-	int id; double lon; double lat;; double x_coord; double y_coord; int x_discr; int y_discr; int key_loc_discr;
+	
+	int station_index=0; int id; double lon; double lat;; double x_coord; double y_coord; int x_discr; int y_discr; int key_loc_discr;
 	while (infile >> id >> lat >> lon >> x_coord >> y_coord >> x_discr >> y_discr >> key_loc_discr){
 		set_of_stations[station_index].p.indx=id;
 		set_of_stations[station_index].p.lat=lat;
@@ -242,7 +202,7 @@ vector <customer> read_customers_from_file(const string Liste_Of_Customers_file)
 		Cs.orig.location=orig_loc;
 		Cs.dest.location=dest_loc;
 		cus.push_back(Cs);
-		}
+	}
 
 	int Number_customers = cus.size();
     cout<<"\n customer size is:\t"<<Number_customers<<endl;
@@ -351,6 +311,7 @@ void Network::read_data_network(std::string locations_file, std::string stations
 		counter += 1;
 		// cout<<"\n counter_2 \t"<<counter<<endl;
 	}
+	cout<<"counter "<<counter<<endl;
 	infile.close();
 
 
@@ -391,12 +352,18 @@ void Network::read_data_network(std::string locations_file, std::string stations
 		map_key_to_location.at(key_loc_discr) = counter;
 	}
 	infile.close();
-	cout<<"\n  map_key_to_location.at(0+100+1) \t"<< map_key_to_location.at(0+1715+1)<<endl;
+	cout<<"map_key_to_location[11800] "<<map_key_to_location[11800]<<" line "<<__LINE__<<endl;
+	// 		exit(0);
+
+	if(map_key_to_location.at(12635)!=1715){
+		cout<<"bug in line: "<<__LINE__<<endl;
+		exit(0);
+	}
+
 }
 
 // calculate the travel time between n_used_location in the network(including 63 stations, customer, i depot) by private car
 void Network::compute_time_matrix(double circuity_factor, double delta_x, double delta_y){
-	//todo for xiaoyi
 	for (int loc1 = 0; loc1 < n_used_locations; loc1++)
 		for (int loc2 = 0; loc2 <= n_used_locations; loc2++)
 			time_matrix.push_back(0);
@@ -437,7 +404,7 @@ void Network::compute_time_matrix(double circuity_factor, double delta_x, double
 }; //Network::compute_time_matrix
 
 ////include station/line/customer configuration, and time matrix from one stop to another stop
-void initialize_network(Network &n, const std::string locations_file, std::string stations_file, const DiscretizationHandler& discretizationHandler){	
+void  initialize_network(Network &n, const std::string locations_file, std::string stations_file, const DiscretizationHandler& discretizationHandler){	
 	n.read_data_network(locations_file, stations_file);
 	n.compute_time_matrix(Consts::circuity_factor, discretizationHandler.delta_x, discretizationHandler.delta_y);
 	}
@@ -459,11 +426,11 @@ void Global_solution:: update_travel_time_on_arc(const vector<stop>& set_of_stat
 
 		vector<int> active_station_ids;
 
-		for (int i:this->L[l].get_active_station_ids()){ // the global line
+		for (int i:this->L[l].get_active_station_ids()){
 			active_station_ids.push_back(i);
 		}
 
-		if(active_station_ids.size()>1){
+		if(active_station_ids.size()>1){ //if there are >= 2 stations in the line, we calculate the travel time on arc
 			for (int active_station_index=0; active_station_index<active_station_ids.size()-1;active_station_index++){
 
 				int active_station_id = active_station_ids.at(active_station_index);
@@ -483,7 +450,7 @@ void Global_solution:: update_travel_time_on_arc(const vector<stop>& set_of_stat
 	// cout<<"  this->L[0].get_active_station_ids()  "<<this->L[0].get_active_station_ids().size()<<endl;
 	// cout<<"<travel_time_on_arc[1][12]"<<travel_time_on_arc[11][12]<<endl;
 	// exit(0);
-}//initialisation_of_travel_time_on_arc
+}
 
 
 void Global_solution::check_consistency() const
@@ -520,19 +487,19 @@ void Global_solution::check_consistency() const
 				throw err_msg;
 			}
 
-			if (DIStance.size()!=number_of_stations)
+			if (average_travel_time_PT.size()!=number_of_stations)
 			{
 				std::stringstream err_msg;
-				err_msg<<"\nLine "<<__LINE__<<": Error: DIStance.size()="<<DIStance.size()
+				err_msg<<"\nLine "<<__LINE__<<": Error: average_travel_time_PT.size()="<<average_travel_time_PT.size()
 					<<" and number_of_stations="<<number_of_stations<<": they should instead be "
 					<<"the same"<<endl;
 				cout<<err_msg.str();
 				throw err_msg;
 			}
 
-			for (int i=0; i<DIStance.size(); i++)
+			for (int i=0; i<average_travel_time_PT.size(); i++)
 			{
-				vector<float> row = DIStance.at(i);
+				vector<float> row = average_travel_time_PT.at(i);
 				if (row.size()!=number_of_stations)
 				{
 					std::stringstream err_msg;
@@ -558,13 +525,6 @@ void Global_solution::check_consistency() const
 		// }	
 	}		
 } //Global_solution::check_consistency()
-
-
-//initial velocity for each line is 0
-void Global_solution::Initialise_velocity(){
-	this->velocity.resize(number_of_lines, 0);
-	this->check_consistency();
-}
 
 // This function return the travel time from the first active station to last active station on line
 float Global_solution::end_to_end_time(int line_index, const vector<stop>& set_of_stations) const{
@@ -750,18 +710,11 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations){
 		vector<list <int> > path;
 		path.clear();
 
-		// cout<<"-------------------------------------------------"<<endl;
-		for(int line_index=0; line_index<number_of_lines; line_index++){// xiaoyi: change here find all active and add to V
+		for(int line_index=0; line_index<number_of_lines; line_index++){
 
 			if (Consts::debug_mode)
 				this->L[line_index].check_consistency();
-			// cout<<"\n line_index"<<line_index<<endl;
-			// cout<<"\n current_line.get_nbr_stat()\t"<<this->L[line_index].get_nbr_stat()<<endl;
-
-			if (this->L[line_index].get_nbr_stat() ==0 || this->L[line_index].get_nbr_stat() ==1 || this->L[line_index].NV==0){
-				cout<<"\n get_nbr_stat() ==0 current_line \t"<< line_index ;
-			}
-
+			//only add the station where there is more than 2 active stations on its line or more than 0 bus to V
 			if (this->L[line_index].get_nbr_stat() >1 && this->L[line_index].NV>0){
 				for (int active_station_id: this->L[line_index].get_active_station_ids()){
 					StopPoint stop_point(line_index, active_station_id);
@@ -772,8 +725,8 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations){
 
 
 		this->update_travel_time_on_arc(set_of_stations);
-		// cout<<"\n line\t"<<__LINE__<<endl;
 
+		//find the successor of each nodes
 		for(cm=0; cm<V.size(); cm++){
 			list <int> suc;
 			for(cn=0; cn<V.size();cn++)
@@ -806,7 +759,6 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations){
 		}
 
 
-				int cmt=0;
 
 	// s:departing station
 	for(int s=0;s<Number_stations;s++) //  for(int s=0;s<ns;s++)
@@ -822,31 +774,29 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations){
 		pred.resize(V.size());
 		for (int i = 0; i < V.size(); i++)
 			d[i] = MYINFINITY;        //Initiatization to the MYINFINITY
-			//cout<<"\n s="<<s;
 
 		for(cn=0; cn<Number_stations;cn++){
 			if (Consts::debug_mode)
 			{
 				this->check_consistency();
-				//todo for xiaoyi: change the DIStance to Pt_time
-				if (s >= this->DIStance.size() )
+				if (s >= this->average_travel_time_PT.size() )
 				{
 					cout<<"\nLine "<<__LINE__<<": Error: trying to access station s="
-						<< s <<" while this->DIStance.size()="<<
-						this->DIStance.size()<<endl;
+						<< s <<" while this->average_travel_time_PT.size()="<<
+						this->average_travel_time_PT.size()<<endl;
 					exit(0);
 				}
 
-				if (cn >= this->DIStance.at(s).size() )
+				if (cn >= this->average_travel_time_PT.at(s).size() )
 				{
 					cout<<"\nLine "<<__LINE__<<": Error: trying to access station cn="
-						<< s <<" while this->DIStance.at(s).size()="<<
-						this->DIStance.at(cn).size()<<endl;
+						<< s <<" while this->average_travel_time_PT.at(s).size()="<<
+						this->average_travel_time_PT.at(cn).size()<<endl;
 					exit(0);
 				}
 
 			}//end debug
-			this->DIStance.at(s).at(cn)=MYINFINITY;
+			this->average_travel_time_PT.at(s).at(cn)=MYINFINITY;
 		}
 
 			for (int i = 0; i < V.size(); i++){
@@ -871,13 +821,7 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations){
 
 		set<int >::iterator itr;
 
-		/*	list<int>::iterator p = succ[10].begin();
-				while(p != succ[10].end())
-				{
-				  cout << V[*p].station << " ";
-				  p++;
-				}*/
-		
+
 		int k=0,dep;
 		while (!pending.empty()){
 			// search the node u with minimal value d[u] in the pending set
@@ -931,14 +875,13 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations){
 				if(V[i].station_id!=s){  
 				list<int> P;
 				int t = V[i].station_id;
-		//		cout<<"\n"<<DIStance[s][t];
-				if (d[i] + t_egress < this->DIStance.at(s).at(t) ) // distance entre staions s et t (rÈsultat de l'algo ; ‡ initialiser ‡ l'infini)
+		//		cout<<"\n"<<average_travel_time_PT[s][t];
+				if (d[i] + t_egress < this->average_travel_time_PT.at(s).at(t) ) // distance entre staions s et t (rÈsultat de l'algo ; ‡ initialiser ‡ l'infini)
 				{
-					this->DIStance.at(s).at(t) = d[i]+t_egress;
+					this->average_travel_time_PT.at(s).at(t) = d[i]+t_egress;
 					P.clear();
 
-					// With the two lines above we reset the public transit routes from the origin to
-					// the destination
+					// With the two lines above we reset the public transit routes from the origin to the destination
 					this->list_of_stations[s][t].clear(); //s:departing_station; t:arrival_station
 					this->set_of_used_lines[s][t].clear();
 					this->list_of_lines[s][t].clear();
@@ -957,10 +900,8 @@ void Global_solution::dijkstra(const vector<stop>& set_of_stations){
 					this->list_of_stations[s][t].push_front(V[dep].station_id);
   				}
 				path.push_back(P);
-				cmt++;
 			}
 	}
-	// cout<<"-------------------------------------------------"<<endl;
 
 	this->check_consistency();
 } // end Dijikstra
@@ -996,14 +937,13 @@ int Global_solution::station_active_on_any_line(int station_index) const {
 //To get which Dij matrix I have to use
 //customer index not to change the type for everyone and the nearest station
 void Global_solution::Customer_category (int customer_index){
-	//todo for xiaoyi: no MTTC_C
 	
 	this->check_consistency();
 	int tst=0, i=0;
 	//R_W_PT_RS=0, R_RS_PT_W=1, R_W=2,R_PT=3,R_RS=4
 	cus.at(customer_index).dstnce=calculateDistance(cus.at(customer_index).orig, cus.at(customer_index).dest)*Circuity_walker;
 	cus.at(customer_index).RT=INVALID;
-
+	
 
 	// if d(i, i+n)<= d_{max}, c belongs to R_W
 	if(cus.at(customer_index).dstnce < maximum_walk)
@@ -1021,7 +961,7 @@ void Global_solution::Customer_category (int customer_index){
 		
 		tst=0,i=0;
 		while(tst==0 || i== Number_stations){
-			//todo for xiaoyi: should we add constraint on the active station number on that line?
+			//todo for xiaoyi: should we add constraint of the active station number on that line?
 			if (station_active_on_any_line(cus.at(customer_index).LM[i].pt.indx) == 1){
 				//find the closest last mile station
 				cus.at(customer_index).AS.dx=cus.at(customer_index).LM[i].pt.indx;
@@ -1052,6 +992,12 @@ void Global_solution::Customer_category (int customer_index){
 		if(cus.at(customer_index).DS.dx==cus.at(customer_index).AS.dx)
 			cus.at(customer_index).RT = R_RS;
 	}
+	// cout<<"\n"<<cus.at(customer_index).fm<<endl;
+	// cout<<"\n"<<cus.at(customer_index).DS.dx<<endl;
+	// cout<<"\n"<<cus.at(customer_index).lm<<endl;
+	// cout<<"\n"<<cus.at(customer_index).AS.dx<<endl;
+	// cout<<"\n"<<maximum_walk<<endl;
+	// exit(0);
 	
 	this->check_consistency();
 }//Global_solution::Customer_category
@@ -1059,7 +1005,7 @@ void Global_solution::Customer_category (int customer_index){
 
 void Global_solution::Define_customer_type(int customer_index, const vector<stop>& set_of_stations){
 	this->check_consistency();
-	float MTT_c = Maximum_Trip_Coefficient*((this->cus.at(customer_index).dstnce*Circuity)/RSV_speed)*60+20;
+	float MTT_c = Maximum_Trip_Coefficient*((this->cus.at(customer_index).dstnce*Circuity)/RSV_speed)*60;
 	float travel_time = 0;
 
     if(this->cus.at(customer_index).DS.dx==this->cus.at(customer_index).AS.dx   && this->cus.at(customer_index).RT !=2){
@@ -1076,17 +1022,17 @@ void Global_solution::Define_customer_type(int customer_index, const vector<stop
     	}
     }
 
-	//todo for xiaoyi: use cus.at(customer_index).RT replace Category.at(customer_index)
+	// xiaoyi: difference between cus.at(customer_index).RT replace Category.at(customer_index)
     if(this->cus.at(customer_index).RT == R_W_PT_RS){ //if last mile > maximum_walk distance
 
-		travel_time=this->DIStance.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx)+
-					(this->cus.at(customer_index).DS.wd*60)/walk_speed+
+		travel_time=(this->cus.at(customer_index).DS.wd*60)/walk_speed+
+					this->average_travel_time_PT.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx)+
 					calculateDistance(set_of_stations[cus[customer_index].AS.dx].p,cus[customer_index].dest)/RSV_speed*60;
 
     	this->PT_Estimated_EDT_LAT_To_Station.at(customer_index)=
 			floor(// earliest RS departure time at station s 
 				this->cus.at(customer_index).EDT+
-				this->DIStance.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx)//average time from DS to AS
+				this->average_travel_time_PT.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx)//average time from DS to AS
 				+(this->cus.at(customer_index).DS.wd*60)/walk_speed 
 			);
 
@@ -1098,14 +1044,13 @@ void Global_solution::Define_customer_type(int customer_index, const vector<stop
 	}
 
 	if(this->cus.at(customer_index).RT == R_RS_PT_W){
-		// change for xiaoyi: calculate the travel time of ride sharing according to the distance between origin and departure destination 
-		travel_time=this->DIStance.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx)+
-					(this->cus.at(customer_index).DS.wd*60)/walk_speed+
-					calculateDistance(cus[customer_index].orig, set_of_stations[cus[customer_index].DS.dx].p)/RSV_speed*60;
+		travel_time=calculateDistance(cus[customer_index].orig, set_of_stations[cus[customer_index].DS.dx].p)/RSV_speed*60+
+					this->average_travel_time_PT.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx)+
+					(this->cus.at(customer_index).DS.wd*60)/walk_speed;
 
 		this->PT_Estimated_EDT_LAT_To_Station.at(customer_index)=floor( //RS latest arrival time to station s 
 															this->cus.at(customer_index).LAT-
-															this->DIStance.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx)-
+															this->average_travel_time_PT.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx)-
 															(this->cus.at(customer_index).AS.wd*60)/walk_speed 
 															);
 
@@ -1116,12 +1061,11 @@ void Global_solution::Define_customer_type(int customer_index, const vector<stop
 	}
 
 	if(this->cus.at(customer_index).RT == R_PT){
-		travel_time=this->DIStance.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx);
+		travel_time=this->average_travel_time_PT.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx);
 		this->PT_Estimated_EDT_LAT_To_Station.at(customer_index) =
-			this->cus.at(customer_index).EDT+
-			this->DIStance.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx);
+				this->cus.at(customer_index).EDT+
+				this->average_travel_time_PT.at(this->cus.at(customer_index).DS.dx).at(this->cus.at(customer_index).AS.dx);
 		this->Category.at(customer_index) = R_PT;
-		// cout<<"\n travel_time_3 \t"<<travel_time<<endl;
 	}
 
 	if(this->cus.at(customer_index).RT == R_RS){
@@ -1134,14 +1078,6 @@ void Global_solution::Define_customer_type(int customer_index, const vector<stop
 		this->Category.at(customer_index) = R_W;
 	}
 
-	if(PT_Estimated_EDT_LAT_To_Station.at(customer_index)>1440){
-		cout<<"\n check PT_Estimated_EDT_LAT_To_Station\t"<<PT_Estimated_EDT_LAT_To_Station.at(customer_index)<<"  in line "<<__LINE__<<endl;
-		exit(1);
-	}
-
-	// cout<<"MTT_c  "<<MTT_c<<endl;
-	// cout<<"travel_time  "<<travel_time<<endl;
-	
 	if(travel_time > MTT_c   && this->cus.at(customer_index).RT != R_W){
 	
 		this->cus.at(customer_index).RT = R_RS; 
@@ -1157,10 +1093,8 @@ void Global_solution::Define_customer_type(int customer_index, const vector<stop
 				this->set_of_used_lines[this->cus.at(customer_index).DS.dx][this->cus.at(customer_index).AS.dx].begin(); p !=
 				this->set_of_used_lines[this->cus.at(customer_index).DS.dx][this->cus.at(customer_index).AS.dx].end(); p++
 			)
-			this->L[*p].Nbr_users++; // We update the number of users that use every line
+			this->L[*p].Nbr_users++;
 	}
-// cout<<"\n >Category.at(customer_index) \t"<<Category.at(customer_index)<<endl;
-
     this->check_consistency();
  }//Global_solution::Define_customer_type()
 
@@ -1173,7 +1107,6 @@ void Global_solution::Compute_Customer_PT_trajectory(){
 		if(this->cus.at(customer_index).RT!=2 && this->cus.at(customer_index).RT!=4){ //does not including only walking or ride sharing modes
 		list<int>::const_iterator p = this->list_of_stations[this->cus.at(customer_index).DS.dx][this->cus.at(customer_index).AS.dx].begin();
 		ca=0;
-				// cout<<"   1 cus.at(customer_index).traj_stat[0][i]   "<<cus.at(customer_index).traj_stat[0]<<endl;
         while(p != this->list_of_stations[this->cus.at(customer_index).DS.dx][this->cus.at(customer_index).AS.dx].end()){
         	this->cus.at(customer_index).traj_stat[0]+= std::to_string(*p); // does not include the departure sation
         	ca++;
@@ -1181,7 +1114,6 @@ void Global_solution::Compute_Customer_PT_trajectory(){
         		this->cus.at(customer_index).traj_stat[0] += ",";
         	p++;
         }
-				// cout<<"   2cus.at(customer_index).traj_stat[0][i]   "<<cus.at(customer_index).traj_stat[0]<<endl;
 
 	}
 		// exit(0);
@@ -1194,8 +1126,7 @@ int Global_solution::write_ride_sharing_results(const vector<stop>& set_of_stati
 	ofstream monFlux(nomFichier.c_str());
 	int i,flt,aaa,bbb,A;
 	Heure HH; // time
-	if(monFlux)
-	{
+	if(monFlux){
 		monFlux << "write ride sharing O-D and earliest departure and latest arrive time";
 		monFlux <<"\n customer index \t orgin id \t destination id \t earliest depart time \t lastest arrive time \t customer arrive/depart station id \t RS latest/earliest arrive time"<<endl;
 	    for ( i = 0; i < this->cus.size(); i++){
@@ -1279,7 +1210,12 @@ void Problem::construct_data_problem(const Network &n, const Global_solution& gl
 			// have 1 origin, 1 transfer and 1 destination.
 			n_ride_sharing_requests = n_ride_sharing_requests_;
 			this->n_nodes = 3 * n_ride_sharing_requests + 1; //aa: why "+1"? Please, explain        // Nis:I don't know //aa: I'll ask Yves
+			if(n_nodes==1){
+				cout<<"no ride sharing customers in line "<<__LINE__<<endl;
+				exit(1);
+			}
 			// cout<<"\n ^^^^^^^^Global solution particle "<< glob_sol.nume <<"; n_ride_sharing_requests="<<n_ride_sharing_requests;
+			cout<<"n_ride_sharing_requests"<<n_ride_sharing_requests<<endl;
 			if (Consts::debug_mode)
 			{
 				if (n_ride_sharing_requests < 0 || n_ride_sharing_requests < 0)
@@ -1327,25 +1263,27 @@ void Problem::construct_data_problem(const Network &n, const Global_solution& gl
 					//Note that ride_sharing_request_index is different from i. The objective is to create a list of customers that will use
 					//totally or partially ride sharing, so a customer origin_node is different from cus[i].
 
-					//cout<<"\n n_ride_sharing_requests="<<n_ride_sharing_requests<< " counter="<<ride_sharing_request_index;
-					//cout<<"\n cus[i].orig.Identif="<<cus.at(i).orig.Identif<<"   cus[i].dest.Identif="<<cus.at(i).dest.Identif<<endl;
+					// cout<<"\n n_ride_sharing_requests="<<n_ride_sharing_requests<< " counter="<<ride_sharing_request_index;
+					// cout<<"\n cus[i].orig.Identif="<<cus.at(i).orig.Identif<<"   cus[i].dest.Identif="<<cus.at(i).dest.Identif<<endl;
 					this->nodes.at(origin_node).loc = n.map_key_to_location.at(single_customer.orig.Identif);
 
 					this->nodes.at(destination_node).loc = n.map_key_to_location.at(single_customer.dest.Identif);
 
-					//cout<<"set_of_stations.at(cus.at(i).AS.dx).p.Identif="<<set_of_stations.at(cus.at(i).AS.dx).p.Identif<<endl;
+					// cout<<"set_of_stations.at(cus.at(i).AS.dx).p.Identif="<<set_of_stations.at(cus.at(i).AS.dx).p.Identif<<endl;
+					// cout<<"single_customer="<<single_customer.RT<<endl;
 
 					if(single_customer.RT==R_W_PT_RS)
-					{
+					{		
+							// cout<<"n.map_key_to_location[11800]"<<n.map_key_to_location[11800]<<endl;
 							this->nodes.at(transfer_node).loc =
 							n.map_key_to_location.at(set_of_stations.at(single_customer.AS.dx).p.Identif);           // Note: the discretized location is used here, because the station id number is not provided in the file 'results'
-					}
+							// cout<<"\n line "<<__LINE__<<endl;
+				}
 					if(single_customer.RT==R_RS_PT_W)
 					{
-
 							this->nodes.at(transfer_node).loc =
 							n.map_key_to_location.at(set_of_stations.at(single_customer.DS.dx).p.Identif);           // Note: the discretized location is used here, because the station id number is not provided in the file 'results'
-					//cout<<"\n 2nd if"<<endl;
+					// cout<<"\n 2nd if"<<endl;
 					}
 
 					//cout<<"\n here cus["<<i<<"].RT="<<cus[i].RT<<endl;
@@ -1626,7 +1564,6 @@ void Global_solution::initialisation_avg_TT_and_category_zone()
 			this->Avg_TT_0[a].PT=0;
 			for(int b=0;b<Number_categories;b++)
 				this->category_zone[a][b]=0;
-			
 		}
 
 		this->check_consistency();
@@ -2092,15 +2029,15 @@ void related_request_removal(const Network &n, const Problem &p, Solution &s) {
 
 // Run the LNS algorithm:
 // We use const Network& to ensure that we do not modify the network
-int Global_solution::run_lns_algorithm(int particle_index, const Network &n,
+int Global_solution::run_lns_algorithm( const Network &n,
 	const vector<stop> set_of_stations)
 {
 	this->check_consistency();
 	// Initialize the problem:
 	//Pop.at(index_network).CTT_RS=0;
 	Problem p;
-	// todo for xiaoyi: RideSharing_Users = 0 for 100 customers
 	int n_req = this->RideSharing_Users;
+
 	p.construct_data_problem(n, *this, n_req, set_of_stations);
 
 	p.compute_user_dissimilarity(n, n_req);
@@ -2109,15 +2046,15 @@ int Global_solution::run_lns_algorithm(int particle_index, const Network &n,
 	Solution s_curr;
 	Solution s_best;
 	Solution s_temp;
-	//cout<<"\n Arrive là -1    n_req="<<n_req<<endl;
+	// cout<<"\n Arrive là -1    n_req="<<n_req<<endl;
 	s_curr.initialize_solution(n, p, n_req);
-	//cout<<"\n ici A"<<endl;
+	// cout<<"\n ici A"<<endl;
 	s_best.initialize_solution(n, p, n_req);
-	//cout<<"\n ici B"<<endl;
+	// cout<<"\n ici B"<<endl;
 	s_temp.initialize_solution(n, p, n_req);
-	//cout<<"\n Apres Init"<<endl;
+	// cout<<"\n Apres Init"<<endl;
 	// Construct an initial solution:
-	//cout<<"\n Arrive là 0"<<endl;
+	// cout<<"\n Arrive là 0"<<endl;
 	random_order_best_insertion(n, p, s_curr);
 	// cout<<"\n Après random"<<endl;
 	// cout<<"\n Arrive là "<<endl;
@@ -2125,7 +2062,7 @@ int Global_solution::run_lns_algorithm(int particle_index, const Network &n,
 	int debug_counter = 0;
 	if (Consts::debug_mode)
 	{	
-		// cout<<"debug_counter:	"<<debug_counter<<endl;
+		cout<<"debug_counter:	"<<debug_counter<<endl;
 		if (s_curr.request_bank.size() != 0)
 		{
 		cout<< "\n error in line "<<__LINE__<<": request bank should be empty, since at the beginning we should always be able to satisfy all ride sharing users, because in the worst case a dedicated car will be given to each user. The reasons for this error could be: (i) one of the users has an infeasible time window constraint or (ii) teh numbe of available cars is less than the number of users"<<endl;
@@ -2148,7 +2085,7 @@ int Global_solution::run_lns_algorithm(int particle_index, const Network &n,
 	s_best.copy_solution_from(n, p, s_curr);
 
 	printf("\n line %d: Global solution particle %d New best LNS solution found in initialisation with %d vehicles and total travel time %2f \n",
-			__LINE__, particle_index, s_best.vehicles_used, s_best.obj_value);
+			__LINE__, this->nume, s_best.vehicles_used, s_best.obj_value);
 	// The fleet size used in the initial solution is the maximum fleet size during the rest of the procedure:
 	//max_vehicles = s_curr.vehicles_used;
 
@@ -2175,18 +2112,15 @@ int Global_solution::run_lns_algorithm(int particle_index, const Network &n,
 				// cout<<"case 3 "<<__LINE__<<endl; 
 				random_route_removal(n, p, s_curr); break;
 		}
-		// cout<<"debug	"<<__LINE__<<endl;
 
 		// Perform an LNS insertion operator on the current solution:
 		random_order_best_insertion(n, p, s_curr);
 
-		// cout<<"debug	"<<__LINE__<<endl;
 
 		// Set the solution back to s_temp if the new solution is more than x percent worse than the previous solution:
 		if (s_curr.request_bank.size() != 0 || s_curr.obj_value > Consts::max_deterioration_factor * s_best.obj_value) {
 			s_curr.copy_solution_from(n, p, s_temp);
 		}
-		// cout<<"debug	"<<__LINE__<<endl;
 
 		// Otherwise, update the best solution if needed:
 	//	if (s_curr.request_bank.size() == 0 && s_curr.obj_value < s_best.obj_value - 0.001) {
@@ -2198,7 +2132,7 @@ int Global_solution::run_lns_algorithm(int particle_index, const Network &n,
 
 	this->CTT_RS = this->compute_travel_times_RS(p, s_best);
 
-	//Pop.at(0).ATT=0;//aa: I needed to move this line outside of this function. I moved it right before
+	//Pop[0].ATT=0;//aa: I needed to move this line outside of this function. I moved it right before
 										// every call to the Eval(..) function. Is it ok what I did? What is the purpose of this
 										// line?
 	                 //Nis: I try to remember ! but i couldn't .. the strange thing is I didn't find that line in previous versions !!
@@ -2220,8 +2154,8 @@ double Global_solution::compute_travel_times_PT()
 		if( Category.at(customer_indice)==0 || Category.at(customer_indice)==1 || Category.at(customer_indice)==3  )
 		{
 			cus.at(customer_indice).TTT.PT =
-				DIStance.at(cus.at(customer_indice).DS.dx).at(cus.at(customer_indice).AS.dx);
-			//cout<<"\n Pop["<<index_network<<"].Category["<<customer_indice<<"]="<<Pop.at(index_network).Category[customer_indice]<<"  Dis[customer_indice]="<<Pop.at(index_network).DIStance[cus[customer_indice].DS.dx][cus[customer_indice].AS.dx];
+				average_travel_time_PT.at(cus.at(customer_indice).DS.dx).at(cus.at(customer_indice).AS.dx);
+			//cout<<"\n Pop["<<index_network<<"].Category["<<customer_indice<<"]="<<Pop.at(index_network).Category[customer_indice]<<"  Dis[customer_indice]="<<Pop.at(index_network).average_travel_time_PT[cus[customer_indice].DS.dx][cus[customer_indice].AS.dx];
 			sum_travel_times_PT += cus.at(customer_indice).TTT.PT ;
 		}
 		else
@@ -2231,35 +2165,35 @@ double Global_solution::compute_travel_times_PT()
 	return sum_travel_times_PT;
 }
 
-double Global_solution::Eval(const Network &n, const vector<stop>& set_of_stations, int particle_index){	
+//evaluate each Pop's performance by calculating ftn, fit_1, fit_2, ATT for each Pop
+double Global_solution::Eval(const Network &n, const vector<stop>& set_of_stations){	
 
 	int customer_type_zone[9]={0,0,0,0,0,0,0,0,0};
+	this->ATT=0;
 	this->obj.fit_1=0;         //Calculate the number of PT vehicles
 	this->obj.fit_2=0;		//Calculate the number of clients type 4 & 0 & 1
 	
 	for(int line_index=0; line_index<number_of_lines; line_index++)
-	{	
-
 		this->obj.fit_1+=this->L[line_index].NV; 	
+	
+	cout<<" \n we are in function Eval:"<<endl;
 
-	}
-	cout<<" \n Function eval:"<<endl;
+	//xiaoyi: not sure if the particle should have own network(or the network should be a member for each particle) in run_lns_algorithm?
 	this->obj.fit_2 =
-			this->run_lns_algorithm(particle_index, n, set_of_stations);
-	cout<<" \n line \t"<<__LINE__<<endl;
-
+			this->run_lns_algorithm(n, set_of_stations);
+	cout<<"\n run_lns_algorithm in line  "<<__LINE__<<"  has been executed"<<endl;
+	
 	std::stringstream solution_identifier_string_;
-
 	solution_identifier_string_<<"Global solution particle "<<this->nume;
 
 	string solution_identifier_string = solution_identifier_string_.str();
-	cout<<"\n "<< solution_identifier_string <<": CTT_RS="<<this->CTT_RS;
+	// cout<<"\n "<< solution_identifier_string <<": CTT_RS="<<this->CTT_RS;
 	
 	this->ftn=2*this->obj.fit_1+this->obj.fit_2;    //The cost of a PT vehicle is twice the cost of RS vehicle //TODO Nis: can you cite the source please ?
 	this->CTT_PT = this->compute_travel_times_PT();
 
 	this->ATT=(this->CTT_RS+this->CTT_PT)*1./cus.size();
-	cout<<"\n "<< solution_identifier_string <<": ATT="<<this->ATT<<endl;
+	// cout<<"\n "<< solution_identifier_string <<": ATT="<<this->ATT<<endl;
 
 	this->initialisation_avg_TT_and_category_zone();
 	for(int customer_index=0;customer_index<cus.size();customer_index++)
@@ -2273,59 +2207,59 @@ double Global_solution::Eval(const Network &n, const vector<stop>& set_of_statio
 		}
 		if(cus[customer_index].orig.location==1 && cus[customer_index].dest.location==2)
 		{
-					this->Avg_TT_0[1].PT+=cus[customer_index].TTT.PT;
-					this->Avg_TT_0[1].RS+=cus[customer_index].TTT.RS;
-					this ->category_zone[1][cus[customer_index].RT]++;
-					customer_type_zone[1]++;
+			this->Avg_TT_0[1].PT+=cus[customer_index].TTT.PT;
+			this->Avg_TT_0[1].RS+=cus[customer_index].TTT.RS;
+			this ->category_zone[1][cus[customer_index].RT]++;
+			customer_type_zone[1]++;
 		}
 		if(cus[customer_index].orig.location==1 && cus[customer_index].dest.location==3)
 		{
-					this->Avg_TT_0[2].PT+=cus[customer_index].TTT.PT;
-					this->Avg_TT_0[2].RS+=cus[customer_index].TTT.RS;
-					this ->category_zone[2][cus[customer_index].RT]++;
-					customer_type_zone[2]++;
+			this->Avg_TT_0[2].PT+=cus[customer_index].TTT.PT;
+			this->Avg_TT_0[2].RS+=cus[customer_index].TTT.RS;
+			this ->category_zone[2][cus[customer_index].RT]++;
+			customer_type_zone[2]++;
 		}
 		if(cus[customer_index].orig.location==2 && cus[customer_index].dest.location==1)
 		{
-					this->Avg_TT_0[3].PT+=cus[customer_index].TTT.PT;
-					this->Avg_TT_0[3].RS+=cus[customer_index].TTT.RS;
-					this ->category_zone[3][cus[customer_index].RT]++;
-					customer_type_zone[3]++;
+			this->Avg_TT_0[3].PT+=cus[customer_index].TTT.PT;
+			this->Avg_TT_0[3].RS+=cus[customer_index].TTT.RS;
+			this ->category_zone[3][cus[customer_index].RT]++;
+			customer_type_zone[3]++;
 		}
 		if(cus[customer_index].orig.location==2 && cus[customer_index].dest.location==2)
 		{
-					this->Avg_TT_0[4].PT+=cus[customer_index].TTT.PT;
-					this->Avg_TT_0[4].RS+=cus[customer_index].TTT.RS;
-					this ->category_zone[4][cus[customer_index].RT]++;
-					customer_type_zone[4]++;
+			this->Avg_TT_0[4].PT+=cus[customer_index].TTT.PT;
+			this->Avg_TT_0[4].RS+=cus[customer_index].TTT.RS;
+			this ->category_zone[4][cus[customer_index].RT]++;
+			customer_type_zone[4]++;
 		}
 		if(cus[customer_index].orig.location==2 && cus[customer_index].dest.location==3)
 		{
-					this->Avg_TT_0[5].PT+=cus[customer_index].TTT.PT;
-					this->Avg_TT_0[5].RS+=cus[customer_index].TTT.RS;
-					this ->category_zone[5][cus[customer_index].RT]++;
-					customer_type_zone[5]++;
+			this->Avg_TT_0[5].PT+=cus[customer_index].TTT.PT;
+			this->Avg_TT_0[5].RS+=cus[customer_index].TTT.RS;
+			this ->category_zone[5][cus[customer_index].RT]++;
+			customer_type_zone[5]++;
 		}
 		if(cus[customer_index].orig.location==3 && cus[customer_index].dest.location==1)
 		{
-					this->Avg_TT_0[6].PT+=cus[customer_index].TTT.PT;
-					this->Avg_TT_0[6].RS+=cus[customer_index].TTT.RS;
-					this ->category_zone[6][cus[customer_index].RT]++;
-					customer_type_zone[6]++;
+			this->Avg_TT_0[6].PT+=cus[customer_index].TTT.PT;
+			this->Avg_TT_0[6].RS+=cus[customer_index].TTT.RS;
+			this ->category_zone[6][cus[customer_index].RT]++;
+			customer_type_zone[6]++;
 		}
 		if(cus[customer_index].orig.location==3 && cus[customer_index].dest.location==2)
 		{
-					this->Avg_TT_0[7].PT+=cus[customer_index].TTT.PT;
-					this->Avg_TT_0[7].RS+=cus[customer_index].TTT.RS;
-					this ->category_zone[7][cus[customer_index].RT]++;
-					customer_type_zone[7]++;
+			this->Avg_TT_0[7].PT+=cus[customer_index].TTT.PT;
+			this->Avg_TT_0[7].RS+=cus[customer_index].TTT.RS;
+			this ->category_zone[7][cus[customer_index].RT]++;
+			customer_type_zone[7]++;
 		}
 		if(cus[customer_index].orig.location==3 && cus[customer_index].dest.location==3)
 		{
-					this->Avg_TT_0[8].PT+=cus[customer_index].TTT.PT;
-					this->Avg_TT_0[8].RS+=cus[customer_index].TTT.RS;
-					this ->category_zone[8][cus[customer_index].RT]++;
-					customer_type_zone[8]++;
+			this->Avg_TT_0[8].PT+=cus[customer_index].TTT.PT;
+			this->Avg_TT_0[8].RS+=cus[customer_index].TTT.RS;
+			this ->category_zone[8][cus[customer_index].RT]++;
+			customer_type_zone[8]++;
 		}
 	}
 	
@@ -2343,13 +2277,10 @@ double Global_solution::Eval(const Network &n, const vector<stop>& set_of_statio
 	return this->ftn;
 }
 
-void generate_initial_population(Global_solution& G_best, vector<Global_solution>& Pop,
-	vector<Global_solution>& P_best_, const vector<stop>& set_of_stations){
-	int rnd;
-	for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
+void generate_initial_population(Global_solution& G_best, vector<Global_solution>& Pop, const vector<stop>& set_of_stations){
 
-		Pop.at(particle_index).nume = particle_index;
-		
+	for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
+		Pop[particle_index].nume = particle_index;
 		if (Consts::debug_mode){
 				if (particle_index>=Pop.size()){
 					std::stringstream err_msg;
@@ -2365,25 +2296,25 @@ void generate_initial_population(Global_solution& G_best, vector<Global_solution
 			
 			if (Consts::debug_mode)
 				{
-					if (line_index>=Pop.at(particle_index).L.size())
+					if (line_index>=Pop[particle_index].L.size())
 					{
 						std::stringstream err_msg;
 							err_msg<<"\nLine "<<__LINE__<<": Error: j="<<line_index
-								<<" while Pop.at(i).L.size()="<<Pop.at(particle_index).L.size()
+								<<" while Pop.at(i).L.size()="<<Pop[particle_index].L.size()
 								<<" and number_of_lines="<<number_of_lines<<endl;
 							cout<<err_msg.str();
 							throw err_msg;
 					}
 				}
 			
-			Pop.at(particle_index).L.at(line_index).NV= LIN[line_index].NV;
+			Pop[particle_index].L.at(line_index).NV= LIN[line_index].NV;
 	
 			for(int station_index=0; station_index< LIN[line_index].s.size(); station_index++){
-				Pop.at(particle_index).L.at(line_index).active[station_index]=LIN[line_index].active[station_index];
-				Pop.at(particle_index).L.at(line_index).s[station_index]=LIN[line_index].s[station_index];
+				Pop[particle_index].L.at(line_index).active[station_index]=LIN[line_index].active[station_index];
+				Pop[particle_index].L.at(line_index).s[station_index]=LIN[line_index].s[station_index];
 			}
 
-			// randominization: this randomization is different from algo 1 since it doesn't random every station in each particile
+			// xiaoyi: this randomization is different from algo 1 on overleaf since it doesn't randominize !!!every!!! but just one station at rnd in each particile
 			int rd;
 			int rnd;
 			int nbr_stat = Pop[particle_index].L[line_index].get_nbr_stat();
@@ -2391,102 +2322,35 @@ void generate_initial_population(Global_solution& G_best, vector<Global_solution
 				cout<<"bug in line  "<<__LINE__<<endl;
 				exit(1);
 			}
-			//todo for xiaoyi: check the randominization for the case when nbr_stat<2(only 1 or 0 active station on that line)
+			//xiaoyi: check the randominization for the case when nbr_stat<2(only 1 or 0 active station on that line)
 			if(nbr_stat<2){
 				rnd =rand()%Pop[particle_index].L[line_index].s.size();
 				rd = rand()%50+1;//xiaoyi: avoid situation where NV equals to 0	
 			}
 			else{
 				rnd = rand()%nbr_stat;
-				Pop.at(particle_index).L.at(line_index).Min_NV= Pop.at(particle_index).Generate_NV(line_index,minWT, set_of_stations);
-	    		Pop.at(particle_index).L.at(line_index).Max_NV= Pop.at(particle_index).Generate_NV(line_index,maxWT, set_of_stations);
-				rd=rand()%(Pop.at(particle_index).L.at(line_index).Min_NV-Pop.at(particle_index).L.at(line_index).Max_NV )+Pop.at(particle_index).L.at(line_index).Max_NV;
+				Pop[particle_index].L.at(line_index).Min_NV= Pop[particle_index].Generate_NV(line_index, minWT, set_of_stations);
+	    		Pop[particle_index].L.at(line_index).Max_NV= Pop[particle_index].Generate_NV(line_index, maxWT, set_of_stations);
+				rd=rand()%(Pop[particle_index].L.at(line_index).Min_NV-Pop[particle_index].L.at(line_index).Max_NV )+Pop[particle_index].L.at(line_index).Max_NV;
 			}
 			if(rd ==0){
 				cout<<"  bug in line  "<<__LINE__<<endl;
 				cout<<"\n nbr_stat  "<<nbr_stat<<endl;
-				cout<<"  Pop.at(particle_index).L.at(line_index).Min_NV "<<Pop.at(particle_index).L.at(line_index).Min_NV<<endl;
-				cout<<"  Pop.at(particle_index).L.at(line_index).Max_NV "<<Pop.at(particle_index).L.at(line_index).Max_NV<<endl;
+				cout<<"  Pop[particle_index].L.at(line_index).Min_NV "<<Pop[particle_index].L.at(line_index).Min_NV<<endl;
+				cout<<"  Pop[particle_index].L.at(line_index).Max_NV "<<Pop[particle_index].L.at(line_index).Max_NV<<endl;
 				exit(1);
 			}
-			Pop.at(particle_index).L.at(line_index).active[rnd]=rand()%2;
-			Pop.at(particle_index).L.at(line_index).NV=rd;
-	    	Pop.at(particle_index).CH[line_index].pos=rnd;
-	        Pop.at(particle_index).CH[line_index].vlr=Pop.at(particle_index).L.at(line_index).active[rnd];
+			Pop[particle_index].L.at(line_index).active[rnd]=rand()%2;
+			Pop[particle_index].L.at(line_index).NV=rd;
+
+			//xiaoyi: there is no use for pos and vlr, they should be removed.
+	    	Pop[particle_index].CH[line_index].pos=rnd;
+	        Pop[particle_index].CH[line_index].vlr=Pop[particle_index].L.at(line_index).active[rnd];
 		} //end of line index iteration 
-
-		P_best_.push_back(Pop.at(particle_index));  
-
-		if (Consts::debug_mode){
-			// Doubt in C++!
-			int last_element_added = P_best_.size()-1;
-			if ( &(P_best_.at(last_element_added) ) == &(Pop.at(particle_index)) )
-				{
-					std::stringstream err_msg;
-					err_msg<<"\nLine "<<__LINE__<<": Error: the addrees &(P_best_.at(last_elemtn_added)) is "<<&(P_best_.at(last_element_added))
-								<<", which is the same of &(Pop.at(particle_index))="<<&(Pop.at(particle_index))<<
-								". last_element_added="<<last_element_added<<";particle_index="<<particle_index<<
-								". Therefore, P_best_.at(last_element_added) and Pop.at(i) are "<<
-								"the same object (what you wanted, instead, is to have two SEPARATE objects that look"
-								<<" the same"<<endl;
-					cout<<err_msg.str();
-					throw err_msg.str();
-				}
-		}
-	
 	} //end of particle index iteration
-	if (Consts::debug_mode)
-	{
-		if ( P_best_.size() != Pop.size() )
-		{
-					std::stringstream err_msg;
-					err_msg<<"\nLine "<<__LINE__<<"Warning: P_best_.size()="<<P_best_.size()
-								<<", Pop.size()="<<Pop.size()<<". Should they be the same instead?????????????????"
-								<<" The fact that they are not the same will produce an error later."<<endl;
-					cout<<err_msg.str();
-					throw err_msg.str();
-		}
-	}
-
-	G_best=Pop.at(0);
-	G_best.ftn=Pop.at(0).ftn;
-	G_best.ATT=Pop.at(0).ATT;
-	G_best.obj.fit_1=Pop.at(0).obj.fit_1;
-	G_best.obj.fit_2=Pop.at(0).obj.fit_2;
-	G_best.nume=0;
 }
 
-void compute_customer_amount(vector<Global_solution>& Pop, const vector<stop>& set_of_stations){
-	for(int particle_index=1; particle_index< Consts::population_size+1; particle_index++){
-		Pop.at(particle_index).RideSharing_Users=0;
-		Pop.at(particle_index).R_w_pt_rs_counter=0;
-		Pop.at(particle_index).R_rs_pt_w_counter=0;
-		Pop.at(particle_index).R_pt_counter=0;
-		Pop.at(particle_index).R_rs_counter=0;
-		Pop.at(particle_index).Update_nbr_usrs();
-		
-		for(int customer_index=0; customer_index<Pop.at(particle_index).cus.size(); customer_index++){
-			Pop.at(particle_index).Customer_category(customer_index);
-			Pop.at(particle_index).Define_customer_type(customer_index,set_of_stations);
-			if(Pop.at(particle_index).cus[customer_index].RT==0 || Pop.at(particle_index).cus[customer_index].RT==1 || Pop.at(particle_index).cus[customer_index].RT==4)
-				Pop.at(particle_index).RideSharing_Users++;
-			switch (Pop.at(0).Category.at(customer_index)){
-				case R_W_PT_RS:
-					Pop.at(particle_index).R_w_pt_rs_counter++;
-					break;
-				case R_RS_PT_W:
-					Pop.at(particle_index).R_rs_pt_w_counter++;
-					break;
-				case R_PT:
-					Pop.at(particle_index).R_pt_counter++;
-					break;
-				case R_RS:
-					Pop.at(particle_index).R_rs_counter++;
-					break;
-			}
-		}
-	} 
-}
+
 
 
 int Print_Number_of_Vehicles(int iter, const vector<Global_solution>& Pop,const Global_solution& G_best){
@@ -2494,9 +2358,9 @@ int Print_Number_of_Vehicles(int iter, const vector<Global_solution>& Pop,const 
 	if(iter==-1){
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){	
-			monFlux<<"\n"<<"vehicle cost for the global best particle"<<endl;
+			monFlux<<"\n"<<"vehicle number for the global best particle"<<endl;
 			monFlux <<"\n"<<"iter \t Indice_best \t TN_Cost \t PT_Veh \t RS_Veh" << endl;
-			monFlux<<"\n"<<-1<<"\t"<<0<<"\t"<<Pop.at(0).ftn<<"\t"<<Pop.at(0).obj.fit_1<<"\t"<<Pop.at(0).obj.fit_2<<endl;
+			monFlux<<"\n"<<-1<<"\t"<<0<<"\t"<<Pop[0].ftn<<"\t"<<Pop[0].obj.fit_1<<"\t"<<Pop[0].obj.fit_2<<endl;
 			monFlux<<"\n"<<-1<<"\t"<<G_best.nume<<"\t"<<G_best.ftn<<"\t"<<G_best.obj.fit_1<<"\t"<<G_best.obj.fit_2<<endl;
 		}else{
 			cout << "ERREUR: Impossible d'ouvrir le fichier. ligne="<<__LINE__ << endl;
@@ -2520,7 +2384,7 @@ int Print_Average_Travel_Time(int iter, const vector<Global_solution>& Pop,const
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){	
 			monFlux << "\n iter \t index \t Average Travel Time" << endl;
-			monFlux<<"\n"<<-1<<"\t"<<0<<"\t"<< Pop.at(0).ATT<<endl;
+			monFlux<<"\n"<<-1<<"\t"<<0<<"\t"<< Pop[0].ATT<<endl;
 			monFlux<<"\n"<<-1<< "\t"<<G_best.nume<< G_best.ATT<<endl;
 		}else{
 			cout << "ERREUR: Impossible d'ouvrir le fichier. ligne="<<__LINE__ << endl;
@@ -2545,7 +2409,7 @@ int Print_Number_of_vehicle_by_Line(int iter, const vector<Global_solution>& Pop
 		if(monFlux){	
 			monFlux<<" \n \n \n Number of vehicles in each line upon iterations \n ";
         	monFlux<<" \n iteration \t index\t line 1 \t line 2 \t line 3 \t line 4 \t line 5 \t line 6 \t line 7 ";		
-			monFlux<<"\n"<<-1<<"\t"<<0<<"\t"<<Pop.at(0).L[0].NV<<"\t"<<Pop.at(0).L[1].NV<<"\t"<<Pop.at(0).L[2].NV<<"\t"<<Pop.at(0).L[3].NV<<"\t"<<Pop.at(0).L[4].NV<<"\t"<<Pop.at(0).L[5].NV<<"\t"<<Pop.at(0).L[6].NV<<endl;
+			monFlux<<"\n"<<-1<<"\t"<<0<<"\t"<<Pop[0].L[0].NV<<"\t"<<Pop[0].L[1].NV<<"\t"<<Pop[0].L[2].NV<<"\t"<<Pop[0].L[3].NV<<"\t"<<Pop[0].L[4].NV<<"\t"<<Pop[0].L[5].NV<<"\t"<<Pop[0].L[6].NV<<endl;
 			monFlux<<"\n"<<-1<<"\t"<<G_best.nume<<"\t"<<G_best.L[0].NV<<"\t"<<G_best.L[1].NV<<"\t"<<G_best.L[2].NV<<"\t"<<G_best.L[3].NV<<"\t"<<G_best.L[4].NV<<"\t"<<G_best.L[5].NV<<"\t"<<G_best.L[6].NV<<endl;
 		}else{
 			cout << "ERREUR: Impossible d'ouvrir le fichier. ligne="<<__LINE__ << endl;
@@ -2570,7 +2434,7 @@ int print_particle_performance(int iter, const vector<Global_solution>& Pop){
 		if(monFlux){
 			monFlux << "iter \t particle_index \t TN_Cost \t PT_Veh \t RS_Veh" << endl;
 			for(int particle_index=0; particle_index< Consts::population_size+1; particle_index++)
-				monFlux<<"\n"<<-1<< "\t"<<particle_index<< "\t"<< Pop.at(particle_index).ftn<<"\t"<<Pop.at(particle_index).obj.fit_1<< "\t"<<Pop.at(particle_index).obj.fit_2;
+				monFlux<<"\n"<<-1<< "\t"<<particle_index<< "\t"<< Pop[particle_index].ftn<<"\t"<<Pop[particle_index].obj.fit_1<< "\t"<<Pop[particle_index].obj.fit_2;
 		}else{
 			cout << "ERREUR: Impossible d'ouvrir le fichier. ligne="<<__LINE__ << endl;
 			exit(0);
@@ -2579,7 +2443,7 @@ int print_particle_performance(int iter, const vector<Global_solution>& Pop){
 		ofstream monFlux(nomFichier.c_str(), ios::app);
 		if(monFlux){
 			for(int particle_index=1; particle_index< Consts::population_size+1; particle_index++)
-				monFlux<<"\n"<<iter<< "\t"<<particle_index<< "\t"<< Pop.at(particle_index).ftn<<"\t"<<Pop.at(particle_index).obj.fit_1<< "\t"<<Pop.at(particle_index).obj.fit_2;
+				monFlux<<"\n"<<iter<< "\t"<<particle_index<< "\t"<< Pop[particle_index].ftn<<"\t"<<Pop[particle_index].obj.fit_1<< "\t"<<Pop[particle_index].obj.fit_2;
 		}else{
 			cout << "ERREUR: Impossible d'ouvrir le fichier. ligne="<<__LINE__ << endl;
 			exit(0);
@@ -2596,7 +2460,7 @@ int Visualize_Number_of_users_of_each_line(int iter, const vector<Global_solutio
 		if(monFlux){
 			monFlux<<" \n \n \n Nbr of users of each line \n \n \n";
 			monFlux<<" \n iteration \t particle \t line 1 \t line 2 \t line 3 \t line 4 \t line 5 \t line 6 \t line 7 "<<endl;
-			monFlux<<"\n"<<-1<<"\t"<<Pop.at(0).L.at(0).Nbr_users<<"\t"<< Pop.at(0).L.at(1).Nbr_users<<"\t"<<Pop.at(0).L.at(2).Nbr_users<<" \t"<< Pop.at(0).L.at(3).Nbr_users<<"\t"<<Pop.at(0).L.at(4).Nbr_users<<"\t"<< Pop.at(0).L.at(5).Nbr_users<<"\t"<< Pop.at(0).L.at(6).Nbr_users<<endl;
+			monFlux<<"\n"<<-1<<"\t"<<Pop[0].L.at(0).Nbr_users<<"\t"<< Pop[0].L.at(1).Nbr_users<<"\t"<<Pop[0].L.at(2).Nbr_users<<" \t"<< Pop[0].L.at(3).Nbr_users<<"\t"<<Pop[0].L.at(4).Nbr_users<<"\t"<< Pop[0].L.at(5).Nbr_users<<"\t"<< Pop[0].L.at(6).Nbr_users<<endl;
 			monFlux<<"\n"<<-1<<"\t"<<G_best.nume<<"\t"<<G_best.L.at(0).Nbr_users<<"\t"<< G_best.L.at(1).Nbr_users<<"\t"<<G_best.L.at(2).Nbr_users<<" \t"<< G_best.L.at(3).Nbr_users<<"\t"<<G_best.L.at(4).Nbr_users<<"\t"<< G_best.L.at(5).Nbr_users<<"\t"<< G_best.L.at(6).Nbr_users<<endl;
 		}else{
 			cout << "ERREUR: Impossible d'ouvrir le fichier. ligne="<<__LINE__ << endl;
@@ -2620,15 +2484,13 @@ int Visualize_number_passenger_category_zone(int iter, const vector<Global_solut
 	if(iter==-1){
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){
-			monFlux<<"\n iteration "<<-1<<"particle"<<0<<endl;
+			monFlux<<"\n iteration\t"<<-1<<"particle \t"<<0;
 			for (int k = 0; k < Number_categories; k++){
-				monFlux<<"\n Category "<<k<<":\t";
 				for (int j = 0; j < 9; j++)    // 9  because we have 3 (P, PC,GC) zone so the different possible movement between zones are 9
-					monFlux<< Pop.at(0).category_zone[j][k]<<"\t";
+					monFlux<< Pop[0].category_zone[j][k]<<"\t";
 			}
-			monFlux<<"\n iteration "<<-1<<"particle"<<G_best.nume<<endl;
+			monFlux<<"\n iteration "<<-1<<"particle"<<G_best.nume;
 			for ( int k = 0; k < Number_categories; k++){
-				monFlux<<"\n Category "<<k<<":\t";
 				for (int j = 0; j < 9; j++)    // 9  because we have 3 (P, PC,GC) zone so the different possible movement between zones are 9
 					monFlux<< G_best.category_zone[j][k]<<"\t";
 			}
@@ -2639,9 +2501,8 @@ int Visualize_number_passenger_category_zone(int iter, const vector<Global_solut
 	}else{
 		ofstream monFlux(nomFichier.c_str(), ios::app);
 		if(monFlux){
-			monFlux<<"\n iteration "<<iter<<"particle"<<G_best.nume<<endl;
+			monFlux<<"\n iteration "<<iter<<"particle"<<G_best.nume;
 			for (int k = 0; k < Number_categories; k++){
-				monFlux<<"\n Category "<<k<<":\t";
 				for (int j = 0; j < 9; j++)    // 9  because we have 3 (P, PC,GC) zone so the different possible movement between zones are 9
 					monFlux<< G_best.category_zone[j][k]<<"\t";
 			}
@@ -2661,7 +2522,7 @@ int Print_Active_Stations_in_Gbest_by_Line(int iter, const vector<Global_solutio
 		if(monFlux){
 			monFlux<<" \n \n \n Number of active stations in each line upon iterations \n ";
 	   		monFlux<<" \n iteration \t line 1 \t line 2 \t line 3 \t line 4 \t line 5 \t line 6 \t line 7 \n  ";
-	   		monFlux<<"\n"<<-1<<"\t"<<Pop.at(0).L.at(0).get_nbr_stat()<<"\t"<<Pop.at(0).L.at(1).get_nbr_stat()<<"\t"<<Pop.at(0).L.at(2).get_nbr_stat()<<" \t"<< Pop.at(0).L.at(3).get_nbr_stat()<<"\t"<<Pop.at(0).L.at(4).get_nbr_stat()<<"\t"<< Pop.at(0).L.at(5).get_nbr_stat()<<"\t"<< Pop.at(0).L.at(6).get_nbr_stat()<<endl;
+	   		monFlux<<"\n"<<-1<<"\t"<<Pop[0].L.at(0).get_nbr_stat()<<"\t"<<Pop[0].L.at(1).get_nbr_stat()<<"\t"<<Pop[0].L.at(2).get_nbr_stat()<<" \t"<< Pop[0].L.at(3).get_nbr_stat()<<"\t"<<Pop[0].L.at(4).get_nbr_stat()<<"\t"<< Pop[0].L.at(5).get_nbr_stat()<<"\t"<< Pop[0].L.at(6).get_nbr_stat()<<endl;
 	   		monFlux<<"\n"<<-1<<"\t"<<G_best.L.at(0).get_nbr_stat()<<"\t"<<G_best.L.at(1).get_nbr_stat()<<"\t"<<G_best.L.at(2).get_nbr_stat()<<" \t"<< G_best.L.at(3).get_nbr_stat()<<"\t"<<G_best.L.at(4).get_nbr_stat()<<"\t"<< G_best.L.at(5).get_nbr_stat()<<"\t"<< G_best.L.at(6).get_nbr_stat()<<endl;
 		}
 		else{
@@ -2686,9 +2547,9 @@ int Print_Number_Riders_by_Ride_Type(int iter, const vector<Global_solution>& Po
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){
 			monFlux<<" \n \n \n Number of riders in each type upon each iteration \n \n \n";
-	   		monFlux<<" \n  iteration\t index \t R_W_PT_RS_\t R_RS_PT_W \t R_PT \t R_RS\n";
-	   		monFlux<<"\n"<<-1 <<"\t"<< 0<<"\t"<<Pop.at(0).R_w_pt_rs_counter<<"\t"<<Pop.at(0).R_rs_pt_w_counter<<"\t"<<Pop.at(0).R_pt_counter<<"\t"<<Pop.at(0).R_rs_counter<<"\t";
-	   		monFlux<<"\n"<<-1 <<"\t"<< G_best.nume<<"\t"<<G_best.R_w_pt_rs_counter<<"\t"<<G_best.R_rs_pt_w_counter<<"\t"<<G_best.R_pt_counter<<"\t"<<G_best.R_rs_counter<<"\t";
+	   		monFlux<<" \n  iteration\t index \t R_W_PT_RS_\t R_RS_PT_W \t R_PT \t R_RS \t R_w\n";
+	   		monFlux<<"\n"<<-1 <<"\t"<< 0<<"\t"<<Pop[0].R_w_pt_rs_counter<<"\t"<<Pop[0].R_rs_pt_w_counter<<"\t"<<Pop[0].R_pt_counter<<"\t"<<Pop[0].R_rs_counter<<"\t"<<G_best.R_w_counter;
+	   		monFlux<<"\n"<<-1 <<"\t"<< G_best.nume<<"\t"<<G_best.R_w_pt_rs_counter<<"\t"<<G_best.R_rs_pt_w_counter<<"\t"<<G_best.R_pt_counter<<"\t"<<G_best.R_rs_counter<<"\t"<<G_best.R_w_counter;
 		}
 		else{
 			cout << "ERREUR: Impossible d'ouvrir le fichier. ligne="<<__LINE__ << endl;
@@ -2698,7 +2559,7 @@ int Print_Number_Riders_by_Ride_Type(int iter, const vector<Global_solution>& Po
 		ofstream monFlux(nomFichier.c_str(), ios::app);
 		if(monFlux){
 	   		monFlux<<"\n";
-			monFlux<<"\n"<<iter <<"\t"<< G_best.nume<<"\t"<<G_best.R_w_pt_rs_counter<<"\t"<<G_best.R_rs_pt_w_counter<<"\t"<<G_best.R_pt_counter<<"\t"<<G_best.R_rs_counter<<"\t";
+			monFlux<<"\n"<<iter <<"\t"<< G_best.nume<<"\t"<<G_best.R_w_pt_rs_counter<<"\t"<<G_best.R_rs_pt_w_counter<<"\t"<<G_best.R_pt_counter<<"\t"<<G_best.R_rs_counter<<"\t"<<G_best.R_w_counter;
 		}else{
 			cout << "ERREUR: Impossible d'ouvrir le fichier. ligne="<<__LINE__ << endl;
 			exit(0);
@@ -2733,7 +2594,6 @@ void Global_solution::proba(int particle, int line_index, int station_index, Glo
 	r_1=(rand()%100)*1./100;
     r_2=(rand()%100)*1./100;
 	
-	//check for xiaoyi, check the P_best_[particle].L[line_index].s[station_index] >=0
     if(P_best_[particle].L[line_index].active[station_index]==1){
     	d1_1= C_1*r_1;
         d1_0= -C_1*r_1;
@@ -2757,7 +2617,7 @@ void Global_solution::proba(int particle, int line_index, int station_index, Glo
     }
     this->L[line_index].V_1[station_index] = inertia*this->L[line_index].V_1[station_index]+d1_1+d2_1;
     this->L[line_index].V_0[station_index] = inertia*this->L[line_index].V_0[station_index]+d1_0+d2_0;
-    if(this->L[line_index].active[station_index]==1) //change for xiaoyi: if(this->L[line_index].active[station_index]==0)
+    if(this->L[line_index].active[station_index]==1) 
     	V=this->L[line_index].V_1[station_index];
     else
     	V=this->L[line_index].V_0[station_index];
@@ -2809,105 +2669,38 @@ void Global_solution::DPSO(int particle_index, const Global_solution& G_best,
 		ac=rand()%100*1./100;
 		ac1=round(CR3*ac); //Returns the integral value that is nearest to x, with halfway cases rounded away from zero.
 
-		//todo for xiaoyi:check auxiliary_3
 		if(ac1==0){
-			// cout<<"\n condition 0"<<endl;
 			auxiliary_3[line_index]=auxiliary_2[line_index]; 
-			// cout<<"\n auxiliary_3 \t"<<auxiliary_3[line_index]<<endl;
 		}
 		else{
 			if(this->L[line_index].get_nbr_stat()<2 ){  
-					// cout<<"\n condition 1"<<endl;
 					auxiliary_3[line_index] = 0;
 			}else{
-				// cout<<"\n condition 2"<<endl;
 				this->L[line_index].Min_NV = this->Generate_NV(line_index, minWT, set_of_stations);
 				this->L[line_index].Max_NV= this->Generate_NV(line_index, maxWT, set_of_stations);
-				// cout<<"\n this->L[line_index].Min_NV \t"<<this->L[line_index].Min_NV<<endl;
-				// cout<<"\n this->L[line_index].Max_NV \t"<<this->L[line_index].Max_NV<<endl;
 
 				int difference = (this->L[line_index].Min_NV-this->L[line_index].Max_NV);
 				int rd;
 
 				rd=rand()%difference+this->L[line_index].Max_NV;
-				// cout<<"\n rd \t"<<endl;
-				
+
 				auxiliary_3[line_index]=rd;
 
 				if((rd==0)|| (L[line_index].Min_NV==0)||(L[line_index].Max_NV==0)){
 					cout<<"  bug in line  "<<__LINE__<<endl;
 					cout<<"\n nbr_stat  "<<this->L[line_index].get_nbr_stat()<<endl;
-					cout<<"  Pop.at(particle_index).L.at(line_index).Min_NV "<<this->L.at(line_index).Min_NV<<endl;
-					cout<<"  Pop.at(particle_index).L.at(line_index).Max_NV "<<this->L.at(line_index).Max_NV<<endl;
+					cout<<"  Pop[particle_index].L.at(line_index).Min_NV "<<this->L.at(line_index).Min_NV<<endl;
+					cout<<"  Pop[particle_index].L.at(line_index).Max_NV "<<this->L.at(line_index).Max_NV<<endl;
 					exit(1);
 				}
 			}	
 		}
 
 		this->L[line_index].NV=auxiliary_3[line_index];
-		
-		// if(	this->L[line_index].NV ==0){
-		// 	cout<<"\n particle_index \t"<<particle_index<<endl;
-		// 	cout<<"\n line_index \t"<<line_index<<endl;
-		// 	cout<<"\n auxiliary_3[line_index] \t"<<auxiliary_3[line_index]<<endl;
-		// 	cout<<"\n Pop[particle_index].L[line_index].NV \t"<<this->L.at(line_index).NV<<endl;
-		// 	cout<<"\n this->L[line_index].get_nbr_stat() \t"<<this->L[line_index].get_nbr_stat()<<endl;
-
-		// 	for(int i:this->L[line_index].get_active_station_ids()){
-		// 		cout<<"\n i \t"<<i<<endl;
-		// 	}
-		// }
 
 		this->check_consistency();
 	}
 } //DPSO
-
-void compteur(const Global_solution& sl, int iter){
-	int a,type_1=0,type_2=0,type_3=0,type_4=0;
-	for(a=0; a<sl.cus.size(); a++){
-		if(sl.Category.at(a)==0)
-			type_1++;
-		else
-			if(sl.Category.at(a)==1)
-				type_2++;
-			else
-				if(sl.Category.at(a)==3)
-					type_3++;
-				else
-					if(sl.Category.at(a)==4)
-						type_4++;
-	}
-
-	TypeRider[iter][0]=type_1;
-	TypeRider[iter][1]=type_2;
-	TypeRider[iter][2]=type_3;
-	TypeRider[iter][3]=type_4;
-	// TypeRider[iter][4]=type_4;
-}
-
-
-void Global_solution:: compteur_2(int iter)
-{
-	int a,type_1=0,type_2=0,type_3=0,type_4=0;
-	for(a=0; a<cus.size(); a++)
-		if(this->cus.at(a).RT ==0)
-			type_1++;
-		else
-			if(this->cus.at(a).RT ==1)
-			type_2++;
-			else
-				if(this->cus.at(a).RT==3)
-					type_3++;
-				else
-					if(this->cus.at(a).RT==4)
-						type_4++;
-
-	TypeRider2[iter][0]=type_1++;
-	TypeRider2[iter][1]=type_2++;
-	TypeRider2[iter][2]=type_3++;
-	TypeRider2[iter][3]=type_4++;
-
-}
 
 
 /**************************** Update of g_best ******************************/
@@ -2917,21 +2710,39 @@ tuple<int, double, int> Update_G_best (int iter, Global_solution& G_best, const 
 	int Act_best=Pop[1].ftn;
 	int L=G_best.ftn;
 	for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
-		if(Pop.at(particle_index).ftn < G_best.ftn )//here G_best is the G_best in 10 particles in iteration -1 
+		if(Pop[particle_index].ftn < G_best.ftn )//here G_best is the G_best in 10 particles in iteration -1 
 		{
-			G_best = Pop.at(particle_index);
+			
+			G_best = Pop[particle_index];
 			G_best.nume = particle_index;
-			G_best.ftn = Pop.at(particle_index).ftn;
+			G_best.ftn = Pop[particle_index].ftn;
+			G_best.ATT= Pop[particle_index].ATT;
+
+			G_best.R_w_counter= Pop[particle_index].R_w_counter;
+			G_best.R_pt_counter= Pop[particle_index].R_pt_counter;
+			G_best.R_rs_pt_w_counter= Pop[particle_index].R_rs_pt_w_counter;
+			G_best.R_w_pt_rs_counter= Pop[particle_index].R_w_pt_rs_counter;
+			G_best.R_rs_counter= Pop[particle_index].R_rs_counter;
+
 			for(int line_index =0; line_index<number_of_lines; line_index++){
-				for(int station_index = 0; station_index<Pop.at(particle_index).L[line_index].s.size(); station_index++){		
-					G_best.L[line_index].s[station_index] =Pop.at(particle_index).L[line_index].s[station_index];
-					G_best.L[line_index].active[station_index] =Pop.at(particle_index).L[line_index].active[station_index];
+				for(int station_index = 0; station_index<Pop[particle_index].L[line_index].s.size(); station_index++){		
+					G_best.L[line_index].s[station_index] =Pop[particle_index].L[line_index].s[station_index];
+					G_best.L[line_index].active[station_index] =Pop[particle_index].L[line_index].active[station_index];
 				}	
+				G_best.L[line_index].NV= Pop[particle_index].L[line_index].NV;
+				G_best.L[line_index].Nbr_users= Pop[particle_index].L[line_index].Nbr_users;
  			}
+
+			for(int ride_category_type =0 ;ride_category_type<Number_categories;ride_category_type++){
+				for(int zone_type=0; zone_type<9;zone_type++){
+					G_best.category_zone[ride_category_type][zone_type]=  Pop[particle_index].category_zone[ride_category_type][zone_type];
+				}
+			}
 		}	
-		if(Pop.at(particle_index).ftn < Act_best)
-			Act_best=Pop.at(particle_index).ftn;
-		sum+=Pop.at(particle_index).ftn;
+		
+		if(Pop[particle_index].ftn < Act_best)
+			Act_best=Pop[particle_index].ftn;
+		sum+=Pop[particle_index].ftn;
 	}
     mean=sum/Consts::population_size;
 
@@ -2940,21 +2751,69 @@ tuple<int, double, int> Update_G_best (int iter, Global_solution& G_best, const 
 	else
 		LastValueGbest=0;
 
-	for(int line_index=0; line_index<number_of_lines; line_index++){
-		WaitingTime[iter][line_index]=G_best.waiting_time[line_index];
-	}
-	compteur(G_best,iter);
-	G_best.compteur_2(iter);
-	cout<<"\n check for xiaoyi 1:iter \t"<<iter<<" mean \t"<<mean<<"\t LastValueGbest \t"<<LastValueGbest<<"\t Act_best \t "<<Act_best<<endl;
-	// cout<<"\n check for xiaoyi TypeRider[iter][0] \t"<< TypeRider[iter][0]<<"\t TypeRider[iter][1] \t"<< TypeRider[iter][1]<<"\t TypeRider[iter][2] \t "<< TypeRider[iter][2]<<"\t TypeRider[iter][3] \t"<< TypeRider[iter][3]<<endl;
-	// cout<<"\n check for xiaoyi TypeRider2[iter][0] \t"<< TypeRider2[iter][0]<<"\t TypeRider2[iter][1] \t"<< TypeRider2[iter][1]<<"\t TypeRider2[iter][2] \t "<< TypeRider2[iter][2]<<"\t TypeRider2[iter][3] \t"<< TypeRider2[iter][3]<<endl;
+	
+
 	return {mean, LastValueGbest, Act_best};
+}
+
+
+void Global_solution::compute_customer_type(const vector<stop>& set_of_stations){
+		this->RideSharing_Users=0;
+		this->Update_nbr_usrs();
+		this->R_w_pt_rs_counter=0;
+		this->R_rs_pt_w_counter=0;
+		this->R_pt_counter=0;
+		this->R_rs_counter=0;
+		this->R_w_counter=0;
+
+		for(int customer_index=0; customer_index<this->cus.size(); customer_index++){
+			this->Customer_category(customer_index);
+			this->Define_customer_type(customer_index,set_of_stations);
+			
+			if(this->cus[customer_index].RT==0 || this->cus[customer_index].RT==1 || this->cus[customer_index].RT==4)
+				this->RideSharing_Users++;
+			//xiaoyi: not very sure about the difference in Category and Cus[customer_index].RT
+			switch (this->Category.at(customer_index)){
+				case R_W_PT_RS:
+					this->R_w_pt_rs_counter++;
+					break;
+				case R_RS_PT_W:
+					this->R_rs_pt_w_counter++;
+					break;
+				case R_PT:
+					this->R_pt_counter++;
+					break;
+				case R_RS:
+					this->R_rs_counter++;
+					break;
+				case R_W:
+					this->R_w_counter++;
+					break;	
+				default:
+				if (Consts::debug_mode)
+				{
+					std::stringstream err_msg;
+					err_msg<<"\nLine "<<__LINE__<<": User category invalid for user customer_index="<<customer_index<<" and pop_index=0; "
+						<<"this->Category.at(customer_index)="<<this->Category.at(customer_index)<<endl;
+					cout<<err_msg.str();
+					throw err_msg.str();
+				}	
+			}
+		}
+
+		// if (Consts::debug_mode)
+		// {
+		// 	if (this->Category.size()!=this->cus.size()){
+		// 		cout<<"\n bug in Line "<<__LINE__<<endl;
+		// 		exit(1);
+		// 	}
+		// }		
 }
 
 /******* change CR1, CR2, CR3 ********/
 void change(int iter, double mean, int LastValueGbest, int Act_best, 
 			float CR1, double CR2, double CR3 ){
-	cout<<"\n check for xiaoyi 2:iter \t"<<iter<<" mean \t"<<mean<<"\t LastValueGbest \t"<<LastValueGbest<<"\t Act_best \t "<<Act_best<<endl;
+	//xiaoyi:please check the update of mean, LastValueGbest, and Act_best
 	if(LastValueGbest>=10)
 		CR1+=CR1*36/100;
 	if(CR1 > 0.55+0.55*37/100)
@@ -2980,10 +2839,80 @@ void BPSO(const Network &n, Global_solution& G_best, vector<Global_solution>& Po
 				throw err_msg.str();
 	}
 
-	generate_initial_population(G_best, Pop, P_best_, set_of_stations);
+	generate_initial_population(G_best, Pop, set_of_stations);
 
-	cout<<"\n line "<<__LINE__ <<"population_size="<<Consts::population_size
-		<<"; P_best_.size()="<<P_best_.size()<<endl;
+	//pragma allows to parallelize
+	#if PARALLEL_MODE
+	#pragma omp parallel for if (PARALLEL_MODE)
+	#endif
+		for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++)
+		{
+			#if PARALLEL_MODE
+			if (Consts::debug_mode)
+			{
+				cout<<"\n Line "<<__LINE__<<": computing dikstra on thread "<< omp_get_thread_num() <<endl;
+			}
+			#endif
+				Pop[particle_index].dijkstra(set_of_stations);
+
+		}
+
+	cout<<"\n For initial population ";
+	#if PARALLEL_MODE
+	#pragma omp parallel for if (PARALLEL_MODE)
+	#endif
+		for(int particle_index=1; particle_index< Consts::population_size+1;particle_index++){	
+			Pop[particle_index].compute_customer_type(set_of_stations);
+		}
+
+
+	#if PARALLEL_MODE
+	#pragma omp parallel for if (PARALLEL_MODE)
+	#endif
+		for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
+			Pop[particle_index].Eval(n, set_of_stations);
+		}//for particle_index
+	
+
+	
+
+	for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
+		//xiaoyi: the initial P_best for each particle is their correponding initialization instead of Pop[0]
+			P_best_.push_back(Pop[particle_index]);
+	}
+
+	for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
+		P_best_[particle_index].nume=particle_index;
+		P_best_[particle_index].ftn=Pop[particle_index].ftn;
+		P_best_[particle_index].obj.fit_1=Pop[particle_index].obj.fit_1;
+		P_best_[particle_index].obj.fit_2=Pop[particle_index].obj.fit_2;
+
+		for(int line_index =0; line_index<number_of_lines; line_index++){
+			for(int station_index = 0; station_index<Pop[particle_index].L[line_index].s.size(); station_index++){		
+				P_best_[particle_index].L[line_index].s[station_index] =Pop[particle_index].L[line_index].s[station_index];
+				P_best_[particle_index].L[line_index].active[station_index] =Pop[particle_index].L[line_index].active[station_index];
+			}	
+			P_best_[particle_index].L[line_index].NV=Pop[particle_index].L[line_index].NV;
+		}
+
+		if (Consts::debug_mode){
+			// Doubt in C++!
+			int last_element_added = P_best_.size()-1;
+			if ( &(P_best_.at(last_element_added) ) == &(Pop[particle_index]) )
+				{
+					std::stringstream err_msg;
+					err_msg<<"\nLine "<<__LINE__<<": Error: the addrees &(P_best_.at(last_elemtn_added)) is "<<&(P_best_.at(last_element_added))
+								<<", which is the same of &(Pop[particle_index])="<<&(Pop[particle_index])<<
+								". last_element_added="<<last_element_added<<";particle_index="<<particle_index<<
+								". Therefore, P_best_.at(last_element_added) and Pop.at(i) are "<<
+								"the same object (what you wanted, instead, is to have two SEPARATE objects that look"
+								<<" the same"<<endl;
+					cout<<err_msg.str();
+					throw err_msg.str();
+				}
+		}
+	}
+
 
 	for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
 		
@@ -3003,91 +2932,54 @@ void BPSO(const Network &n, Global_solution& G_best, vector<Global_solution>& Po
 
 		for(int l=0; l<number_of_lines; l++){
 			if (Consts::debug_mode &&
-				(l >= P_best_.at(particle_index).L.size()
-				|| l >= Pop.at(0).L.size())
+				(l >= P_best_[particle_index].L.size()
+				|| l >= Pop[0].L.size())
 			)
 			{
 					std::stringstream err_msg;
 					err_msg<<"\nLine "<<__LINE__<<": Error: we are going to access P_best_.at(particle_index).L.at(l)"
-						<<" and Pop.at(0).L.at(l)"<<
+						<<" and Pop[0].L.at(l)"<<
 						" but: l="<<l <<", while P_best_.at(particle_index).L.size()="
-						<< P_best_.at(particle_index).L.size() << " and Pop.at(0).L.size()="<<Pop.at(0).L.size()
+						<< P_best_.at(particle_index).L.size() << " and Pop[0].L.size()="<<Pop[0].L.size()
 						<<". So, we are going out of bounds"<<endl;
 					cout<<err_msg.str();
 					throw err_msg.str();
 			}
-
-			// P_best_.at(particle_index).L.at(l)= Pop.at(0).L.at(l);
 			
-			P_best_.at(particle_index).check_consistency();
-
+			P_best_[particle_index].check_consistency();
 		}
 	}
-
-	//pragma allows to parallelize
-	#if PARALLEL_MODE
-	#pragma omp parallel for if (PARALLEL_MODE)
-	#endif
-	for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++)
-	{
-		#if PARALLEL_MODE
-		  if (Consts::debug_mode)
-		  {
-		  	cout<<"\n Line "<<__LINE__<<": computing dikstra on thread "<< omp_get_thread_num() <<endl;
-		  }
-		  #endif
-			Pop.at(particle_index).dijkstra(set_of_stations);
-
-	}
-
-	cout<<"\n"<<__LINE__;
-	cout<<"\n For initial population ";
-	#if PARALLEL_MODE
-	#pragma omp parallel for if (PARALLEL_MODE)
-	#endif
-	for(int particle_index=1; particle_index< Consts::population_size+1;particle_index++){
-		#if PARALLEL_MODE
-		if (Consts::debug_mode)
-		{
-		  	cout<<"\n Line "<<__LINE__<<": Working on PSO particle "<< particle_index <<" on thread "
-		  		<< omp_get_thread_num() <<endl;
-		}
-		#endif
-
-		Pop.at(particle_index).Update_nbr_usrs();
-
-		Pop.at(particle_index).RideSharing_Users=0;
-		for(int customer_Index=0; customer_Index< Pop.at(particle_index).cus.size();customer_Index++){
-			Pop.at(particle_index).Customer_category(customer_Index);
-			Pop.at(particle_index).Define_customer_type(customer_Index,set_of_stations);
-			if(Pop.at(particle_index).cus[customer_Index].RT==0 || Pop.at(particle_index).cus[customer_Index].RT==1 || Pop.at(particle_index).cus[customer_Index].RT==4)
-				Pop.at(particle_index).RideSharing_Users++;
-		}
-	}//for particle_index
-
-
-	#if PARALLEL_MODE
-	#pragma omp parallel for if (PARALLEL_MODE)
-	#endif
-	for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
-		Pop.at(particle_index).Eval(n, set_of_stations, particle_index);
-		Pop.at(particle_index).Initialise_velocity();
-		// for(int line_Index=0; line_Index< number_of_lines;line_Index++)
-		// 	Pop.at(particle_index).calculate_frequency(line_Index, set_of_stations);
-	}//for particle_index
-
+		
 
 	for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
-		// cout<<"\n Pop["<<particle_index<<"].ftn="<<Pop.at(particle_index).ftn<<"    best="<<G_best.ftn;
-		if(Pop.at(particle_index).ftn < G_best.ftn ){
-			G_best=Pop.at(particle_index);
+		// cout<<"\n Pop["<<particle_index<<"].ftn="<<Pop[particle_index].ftn<<"    best="<<G_best.ftn;
+		if(Pop[particle_index].ftn < G_best.ftn ){
+			G_best=Pop[particle_index];
 			G_best.nume=particle_index;
+			G_best.ftn= Pop[particle_index].ftn;
+			G_best.ATT=Pop[particle_index].ATT;
+			G_best.obj.fit_1=Pop[particle_index].obj.fit_1;
+			G_best.obj.fit_2=Pop[particle_index].obj.fit_2;
+			G_best.R_w_counter=Pop[particle_index].R_w_counter;
+			G_best.R_pt_counter=Pop[particle_index].R_pt_counter;
+			G_best.R_rs_pt_w_counter=Pop[particle_index].R_rs_pt_w_counter;
+			G_best.R_w_pt_rs_counter=Pop[particle_index].R_w_pt_rs_counter;
+			G_best.R_rs_counter=Pop[particle_index].R_rs_counter;
+			for(int line_index =0; line_index<number_of_lines; line_index++){
+				for(int station_index = 0; station_index<Pop[particle_index].L[line_index].s.size(); station_index++){		
+					G_best.L[line_index].s[station_index] =Pop[particle_index].L[line_index].s[station_index];
+					G_best.L[line_index].active[station_index]=Pop[particle_index].L[line_index].active[station_index];
+				}	
+				G_best.L[line_index].NV= Pop[particle_index].L[line_index].NV;
+				G_best.L[line_index].Nbr_users= Pop[particle_index].L[line_index].Nbr_users;
+			}
+			for(int ride_category_type =0 ;ride_category_type<Number_categories;ride_category_type++){
+				for(int zone_type=0; zone_type<9;zone_type++){
+					G_best.category_zone[ride_category_type][zone_type]= Pop[particle_index].category_zone[ride_category_type][zone_type];
+				}
+			}
 		}
 	}
-	// cout<<G_best.nume<<endl;
-
-	cout<< "\n G_best before PSO process: "<< G_best.ftn <<" corresponding to particle : "<< G_best.nume;
-	// exit(0);
 
 	print_results(-1, Pop, G_best);
 
@@ -3109,19 +3001,16 @@ void BPSO(const Network &n, Global_solution& G_best, vector<Global_solution>& Po
 		}
 		auto t1 = high_resolution_clock::now();
 
-		cout<<"\n --------------------------------------- "<<endl;
-
 
 		#if PARALLEL_MODE
 		#pragma omp parallel for if (PARALLEL_MODE)
 		#endif
 			for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
 				for(int line_index=0; line_index< number_of_lines; line_index++){
-					for(int station_index=0; station_index< Pop[particle_index].L[line_index].s.size(); station_index++){ //change for xiaoyi: Pop[particle_index].L[line_index].nbr_stat
-						Pop.at(particle_index).proba(particle_index, line_index, station_index, G_best, P_best_,iter);//algorithm2
+					for(int station_index=0; station_index< Pop[particle_index].L[line_index].s.size(); station_index++){ 
+						Pop[particle_index].proba(particle_index, line_index, station_index, G_best, P_best_,iter);//algorithm2
 					}	
-					//todo for xiaoyi: here we update waiting time with previous NV, however, in DPSO, we are going to generate L[line_index].NV with waiting time
-					Pop.at(particle_index).DPSO(particle_index, G_best, P_best_, set_of_stations, CR1, CR2, CR3);// algorithm3
+					Pop[particle_index].DPSO(particle_index, G_best, P_best_, set_of_stations, CR1, CR2, CR3);// algorithm3
 				}
 			}
 
@@ -3129,93 +3018,88 @@ void BPSO(const Network &n, Global_solution& G_best, vector<Global_solution>& Po
 		#pragma omp parallel for if (PARALLEL_MODE)
 		#endif
 			for(int particle_index=1; particle_index<Consts::population_size+1; particle_index++){
-				// cout<<"\n vfsdsfgsfddddddddddd \t"<<__LINE__<<endl;
-				// cout<<"\n particle_index \t"<<particle_index<<endl;
-				Pop.at(particle_index).dijkstra(set_of_stations);
+				Pop[particle_index].dijkstra(set_of_stations);
 			}
 		
-		// cout<<"\n ---------------------------------------"<<endl;
-	
-	
-	#if PARALLEL_MODE
-	#pragma omp parallel for if (PARALLEL_MODE)
-	#endif
-		for(int particle_Index=1; particle_Index< Consts::population_size+1;particle_Index++)
-		{
-			Pop.at(particle_Index).RideSharing_Users=0;
-			Pop.at(particle_Index).Update_nbr_usrs();
-			for(int customer_Index=0; customer_Index< Pop.at(particle_Index).cus.size();customer_Index++)
+		cout<<"here we are "<<__LINE__<<endl;
+
+		#if PARALLEL_MODE
+		#pragma omp parallel for if (PARALLEL_MODE)
+		#endif
+			for(int particle_index=1; particle_index< Consts::population_size+1;particle_index++)
 			{
-				Pop.at(particle_Index).Customer_category(customer_Index);
-				Pop.at(particle_Index).Define_customer_type(customer_Index, set_of_stations);
-				if(Pop.at(particle_Index).cus.at(customer_Index).RT==R_W_PT_RS
-					|| Pop.at(particle_Index).cus.at(customer_Index).RT==R_RS_PT_W
-					|| Pop.at(particle_Index).cus.at(customer_Index).RT==R_RS
-				){
-					Pop.at(particle_Index).RideSharing_Users++;
+				Pop[particle_index].compute_customer_type(set_of_stations);
+			}
+
+
+		#if PARALLEL_MODE
+		#pragma omp parallel for if (PARALLEL_MODE)
+		#endif
+			for(int particle_index=1; particle_index< Consts::population_size+1; particle_index++){
+				Pop[particle_index].write_ride_sharing_results(set_of_stations);
+			}
+		
+		#if PARALLEL_MODE
+		#pragma omp parallel for if (PARALLEL_MODE)
+		#endif
+			for(int particle_index=1; particle_index< Consts::population_size+1; particle_index++){
+				Pop[particle_index].Eval(n, set_of_stations);
+				#if PARALLEL_MODE
+				if (Consts::debug_mode)
+				{
+					cout<<" on thread "<<omp_get_thread_num();
+				}
+				#endif
+				cout<<endl;
+				if( Pop[particle_index].ftn < P_best_.at(particle_index).ftn){
+					if (Consts::debug_mode ){
+							if (P_best_.size() != Pop.size()){
+								std::stringstream err_msg;
+								err_msg<<"\nLine "<<__LINE__<<": WARNING: P_best_.size()="<<
+									P_best_.size()<<", while Pop.size()="<< Pop.size() <<
+									". Is this normal? I think this can cause an error some lines below, "
+									<<" where we access P_best_.at(particle_Index) and Pop[particle_index]"
+									<<". Indeed, it might be that particle_Index is within the bounds of Pop but "
+									<<" out of the bounds of P_best_! Please check."<<endl;
+
+								cout<<err_msg.str();
+								throw err_msg.str();
+							}
+
+							if (particle_index >= P_best_.size()){
+								std::stringstream err_msg;
+								err_msg<<"\nLine "<<__LINE__<<": ERROR: P_best_.size()="<<
+									P_best_.size()<<", but we are trying to access "<< particle_index <<
+									", which is out of bounds."<<endl;
+								throw err_msg.str();
+							}
+						}
+					P_best_.at(particle_index) = Pop[particle_index];
+					P_best_.at(particle_index).nume = particle_index;
+					P_best_.at(particle_index).obj.fit_1 =  Pop[particle_index].obj.fit_1;
+					P_best_[particle_index].obj.fit_2=Pop[particle_index].obj.fit_2;
+					P_best_[particle_index].ftn = Pop[particle_index].ftn;
+					for(int line_index = 0; line_index <number_of_lines; line_index++){
+						for(int station_index=0;station_index<Pop[particle_index].L[line_index].s.size();station_index++){
+							P_best_[particle_index].L[line_index].s[station_index] = Pop[particle_index].L[line_index].s[station_index];
+							P_best_[particle_index].L[line_index].active[station_index]= Pop[particle_index].L[line_index].active[station_index];
+						}
+					P_best_[particle_index].L[line_index].NV=Pop[particle_index].L[line_index].NV;
+					}
 				}
 			}
-		}//particle_Index
-
-	#if PARALLEL_MODE
-	#pragma omp parallel for if (PARALLEL_MODE)
-	#endif
-		for(int particle_index=1; particle_index< Consts::population_size+1; particle_index++){
-			Pop.at(particle_index).write_ride_sharing_results(set_of_stations);
-			// cout<<"\n particle_index \t"<<particle_index<<endl;
-
+		
+		cout << "\n iter \t"<<iter<<"\t before Update_G_best G_best= " << G_best.ftn;
+		auto [Act_best, mean, LastValueGbest]= Update_G_best(iter, G_best, Pop);
+		cout << "\n iter \t"<<iter<<"\t after Update_G_best G_best= " << G_best.ftn;
+		print_results(iter, Pop, G_best);
+		iter++;
+		change(iter, mean, LastValueGbest, Act_best, CR1, CR2, CR3);
+		
+		auto t2 = high_resolution_clock::now();
+		auto diff = duration_cast< duration < double > > (t2 - t1);
+		cout<<"\n time use for  "<<iter<<"th  "<<"iteration is\t"<<diff.count()<<endl;
 		}
-	
-	#if PARALLEL_MODE
-	#pragma omp parallel for if (PARALLEL_MODE)
-	#endif
-		for(int particle_index=1; particle_index< Consts::population_size+1; particle_index++){
-			Pop.at(particle_index).Eval(n, set_of_stations,  particle_index);
-			#if PARALLEL_MODE
-			if (Consts::debug_mode)
-			{
-				cout<<" on thread "<<omp_get_thread_num();
-			}
-			#endif
-			cout<<endl;
-			if( Pop.at(particle_index).ftn < P_best_.at(particle_index).ftn){
-				if (Consts::debug_mode ){
-						if (P_best_.size() != Pop.size()){
-							std::stringstream err_msg;
-							err_msg<<"\nLine "<<__LINE__<<": WARNING: P_best_.size()="<<
-								P_best_.size()<<", while Pop.size()="<< Pop.size() <<
-								". Is this normal? I think this can cause an error some lines below, "
-								<<" where we access P_best_.at(particle_Index) and Pop.at(particle_Index)"
-								<<". Indeed, it might be that particle_Index is within the bounds of Pop but "
-								<<" out of the bounds of P_best_! Please check."<<endl;
-
-							cout<<err_msg.str();
-							throw err_msg.str();
-						}
-
-						if (particle_index >= P_best_.size()){
-							std::stringstream err_msg;
-							err_msg<<"\nLine "<<__LINE__<<": ERROR: P_best_.size()="<<
-								P_best_.size()<<", but we are trying to access "<< particle_index <<
-								", which is out of bounds."<<endl;
-							throw err_msg.str();
-						}
-					}
-				P_best_.at(particle_index) = Pop.at(particle_index);
-			}	;
-		}
-    
-	cout << "\n iter \t"<<iter<<"\t before Update_G_best G_best= " << G_best.ftn;
-	auto [Act_best, mean, LastValueGbest]= Update_G_best(iter, G_best, Pop);
-	cout << "\n iter \t"<<iter<<"\t after Update_G_best G_best= " << G_best.ftn;
-	print_results(iter, Pop, G_best);
-	iter++;
-	change(iter, mean, LastValueGbest, Act_best, CR1, CR2, CR3);
-	
-	auto t2 = high_resolution_clock::now();
-	auto diff = duration_cast< duration < double > > (t2 - t1);
-	cout<<"\n time use for  "<<iter<<"th  "<<"iteration is\t"<<diff.count()<<endl;
-	}
 }//BPSO
 
 
@@ -3235,7 +3119,7 @@ Global_solution::Global_solution(int number_of_stations_, const vector <customer
 	const vector<line> L_){
 	ftn=-1;
 	ATT=-1;
-	nume=0;
+	nume=-1;
 	CTT_PT=0; 
 	CTT_RS=0; 
 	number_of_stations = number_of_stations_;
@@ -3244,7 +3128,7 @@ Global_solution::Global_solution(int number_of_stations_, const vector <customer
 		vector<float> row;
 		for (int j=0; j<number_of_stations; j++)
 			row.push_back(-1);
-		DIStance.push_back(row);
+		average_travel_time_PT.push_back(row);
 	}
 
 	cus = cus_;
@@ -3266,6 +3150,13 @@ Global_solution::Global_solution(int number_of_stations_, const vector <customer
 	}
 
 	this -> L = L_;
+	for(int line_index=0; line_index<number_of_lines; line_index++){
+		for(int station_index=0; station_index< LIN[line_index].s.size(); station_index++){
+			this->L.at(line_index).active[station_index]=LIN[line_index].active[station_index];
+			this->L.at(line_index).s[station_index]=LIN[line_index].s[station_index];
+		}
+	}
+
 
 	if (Consts::debug_mode) check_consistency();
 }
@@ -3289,24 +3180,23 @@ int main(int argc, char *argv[]){
 	double CR3 = 0.53;  //CR3 allows the randomness degree
 	int R_w_pt_rs_counter=0, R_rs_pt_w_counter=0, R_pt_counter=0, R_rs_counter=0;
 
-    load_state(solution_file, LIN); //read LIN
+    load_state(solution_file, LIN); //initialize LIN
 
 	srand(time(0));
 	Network n;
 
     vector<stop> set_of_stations(Number_stations);
 
-	generation_stops(LIN, set_of_stations);//update set of stations with station ids and lines allocated to 
-
-	read_data_stations(0, set_of_stations, Consts::stations_file); //update set of stations with id and loc
-		
+	//generate set_of_stations: read LIN from <load_state.csv> and read loc. index, identif from<input/Stations_10000.txt>
+	read_data_stations(LIN, set_of_stations, Consts::stations_file);
 
     vector <customer> customers_from_file = read_customers_from_file(Liste_Of_Customers_file); 
 
-    Customer_LastMile_FirstMile(customers_from_file, set_of_stations); //customer's origin/destination distance to every station
+    Customer_LastMile_FirstMile(customers_from_file, set_of_stations); //calculate customer's origin/destination distance to every station, sort in ascending order
 
     DiscretizationHandler discretizationHandler(discretization_info_file);
-	
+		cout<<" line "<<__LINE__<<endl;
+
 	//initialize the network with each customer's loc + 63 stops's loc + 1 depot loc and calculated their travel time matrix
 	//time to depot is always 0
     initialize_network(n, locations_file, Consts::stations_file, discretizationHandler);
@@ -3318,13 +3208,6 @@ int main(int argc, char *argv[]){
 		Pop.push_back(glob_sol);
 	}
 
-	for(int line_index=0; line_index<number_of_lines; line_index++){
-		for(int station_index=0; station_index< LIN[line_index].s.size(); station_index++){
-			Pop[0].L.at(line_index).active[station_index]=LIN[line_index].active[station_index];
-			Pop[0].L.at(line_index).s[station_index]=LIN[line_index].s[station_index];
-		}
-	}
-
 	if (Pop.size() != Consts::population_size+1){
 			std::stringstream err_msg;
 			err_msg<<"\nLine "<<__LINE__<<": Error: Consts::population_size+1="<<
@@ -3334,106 +3217,55 @@ int main(int argc, char *argv[]){
 			exit(1);
 	}
 
-	Pop.at(0).nume=0;
 
-	//initialize each line's bus velocity to 0
-	Pop.at(0).Initialise_velocity();
+	Pop[0].nume=0;
 
 	//generate the number of buses on each line
-	for(int line_index=0; line_index<number_of_lines; line_index++){
-		Pop.at(0).L[line_index].NV = Pop.at(0).Generate_NV(line_index, Consts::initial_waiting_time, set_of_stations);
-	}
+	for(int line_index=0; line_index<number_of_lines; line_index++)
+		Pop[0].L[line_index].NV = Pop[0].Generate_NV(line_index, Consts::initial_waiting_time, set_of_stations);
 	
 	cout<<"\n Starting -1 iteration of PSO."<<endl;
 
-	Pop.at(0).dijkstra(set_of_stations);//calculate the shortest path from station to stations based on particle 0 solution, and store in list_of_Station, list_of_lines
+	Pop[0].dijkstra(set_of_stations);//calculate the shortest path from station to stations based on particle 0 solution, and store in list_of_Station, list_of_lines
 
-	// for(int stop_index_1 :Pop.at(0).list_of_stations[1][12]){
-	// 	cout<<"Pop.at(0).list_of_stations[1][12] "<<stop_index_1<<endl;
-	// }
+	cout<<"Pop[0].cus.size()\t"<<Pop[0].cus.size()<<endl;
 
-	// for(int stop_index_1 :Pop.at(0).list_of_lines[1][12]){
-	// 	cout<<"Pop.at(0).list_of_lines[1][12]   "<<stop_index_1<<endl;
-	// }
-	// exit(0);
-
-	Pop.at(0).Update_nbr_usrs();//initialize the number of buses on each line to 0
+	Pop[0].compute_customer_type(set_of_stations);
 	
-	cout<<"Pop.at(0).cus.size()\t"<<Pop.at(0).cus.size()<<endl;
+	Pop[0].Compute_Customer_PT_trajectory(); //compute cust bus trajectory based on list_of_stations given by dijkstra algorithm
 
-	for(int c=0; c<Pop.at(0).cus.size(); c++){
-		Pop.at(0).Customer_category(c);    //based customers' origin/destination to active stations' location to calculate the potential customer type 
-		cout<<"Pop.at(0).cus[0].RT 1 "<<Pop.at(0).cus[0].RT<<endl;
+	Pop[0].write_ride_sharing_results(set_of_stations);
 
-		Pop.at(0).Define_customer_type(c, set_of_stations); //based on the DIStance vector solved by dijkstra, calculate actual customer's type
-		cout<<"Pop.at(0).cus[0].RT 2 "<<Pop.at(0).cus[0].RT<<endl;
+	Pop[0].Eval(n, set_of_stations);
+		
+	Pop[0].check_consistency();
 
-		if(Pop.at(0).cus[c].RT==0 || Pop.at(0).cus[c].RT==1 || Pop.at(0).cus[c].RT==4) {
-			Pop.at(0).RideSharing_Users++;
+
+	// set initial G_best to Pop[0] 
+	Global_solution G_best(Number_stations, Pop[0].cus, Pop[0].L);
+	G_best=Pop[0];
+	G_best.ftn=Pop[0].ftn;
+	G_best.ATT=Pop[0].ATT;
+	G_best.obj.fit_1=Pop[0].obj.fit_1;
+	G_best.obj.fit_2=Pop[0].obj.fit_2;
+	G_best.nume=0;
+	G_best.R_w_counter= Pop[0].R_w_counter;
+	G_best.R_pt_counter= Pop[0].R_pt_counter;
+	G_best.R_rs_pt_w_counter= Pop[0].R_rs_pt_w_counter;
+	G_best.R_w_pt_rs_counter= Pop[0].R_w_pt_rs_counter;
+	G_best.R_rs_counter= Pop[0].R_rs_counter;
+
+	for(int line_index =0; line_index<number_of_lines; line_index++){
+		G_best.L[line_index].NV= Pop[0].L[line_index].NV;
+		G_best.L[line_index].Nbr_users= Pop[0].L[line_index].Nbr_users;
+	}
+
+	for(int ride_category_type =0 ;ride_category_type<Number_categories;ride_category_type++){
+		for(int zone_type=0; zone_type<9;zone_type++){
+			G_best.category_zone[ride_category_type][zone_type]=  Pop[0].category_zone[ride_category_type][zone_type];
 		}
 	}
-
-
-	// for(int stop_index_1 :Pop.at(0).list_of_stations[1][12]){
-	// 	cout<<"Pop.at(0).list_of_stations[1][12] "<<stop_index_1<<endl;
-	// }
-
-	// for(int stop_index_1 :Pop.at(0).list_of_lines[1][12]){
-	// 	cout<<"Pop.at(0).list_of_lines[1][12]   "<<stop_index_1<<endl;
-	// }
-	
-	cout<<"Pop.at(0).cus[0].RT "<<Pop.at(0).cus[0].RT<<endl;
-
-	exit(0);
-
-	Pop.at(0).Compute_Customer_PT_trajectory(); //compute cust bus trajectory based on list_of_stations given by dijkstra algorithm
-
-	Pop.at(0).write_ride_sharing_results(set_of_stations);
-
-	Pop.at(0).ATT=0;
-
-	Pop.at(0).Eval(n, set_of_stations,0);
-
-	for(int customer_index=0; customer_index<Pop.at(0).cus.size(); customer_index++)
-	{
-			switch (Pop.at(0).Category.at(customer_index) )
-			{
-				case R_W_PT_RS:
-					R_w_pt_rs_counter++;
-					break;
-				case R_RS_PT_W:
-					R_rs_pt_w_counter++;
-					break;
-				case R_PT:
-					R_pt_counter++;
-					break;
-				case R_RS:
-					R_rs_counter++;
-					break;
-				case R_W:
-					break;
-				default:
-					if (Consts::debug_mode)
-					{
-						std::stringstream err_msg;
-						err_msg<<"\nLine "<<__LINE__<<": User category invalid for user customer_index="<<customer_index<<" and pop_index=0; "
-							<<"Pop.at(0).Category.at(customer_index)="<<Pop.at(0).Category.at(customer_index)<<endl;
-						cout<<err_msg.str();
-						throw err_msg.str();
-					}
-			}
-	}
-		
-	Pop.at(0).check_consistency();
-	cout<<" \n line \t"<<__LINE__<<endl;
-
-
-
-	// set initial G_best to index 0 
-	Global_solution G_best(Number_stations, Pop.at(0).cus, Pop.at(0).L);
-	G_best.ftn= Pop[0].ftn;
-	cout<<G_best.ftn<<endl;
-	// exit(0);
+	cout<<"G_best.ftn at Pop[0]"<<G_best.ftn<<endl;
 
 	if (Pop.size() != Consts::population_size+1){
 		std::stringstream err_msg;
@@ -3443,21 +3275,31 @@ int main(int argc, char *argv[]){
 		throw err_msg.str();
 	}
 
-	cout<<" \n line \t"<<__LINE__<<endl;
-
-	// todo for xiaoyi: set initial P_best to index 0 or the initialization of particle 1-9
 	vector<Global_solution> P_best; 
-	P_best.push_back(Pop.at(0)); 
-	// cout<<"\n __LINE__  "<<__LINE__<<endl;
-	// exit(0);
+	P_best.push_back(Pop[0]); 
+	cout<<"P_best[0].ftn\t"<<P_best[0].ftn;
+	cout<<"P_best[0].ftn\t"<<Pop[0].ftn;
+
+	P_best[0].ftn=Pop[0].ftn;
+	P_best[0].obj.fit_1=Pop[0].obj.fit_1;
+	P_best[0].obj.fit_2=Pop[0].obj.fit_2;
+	P_best[0].nume=0;
+
+	for(int line_index =0; line_index<number_of_lines; line_index++){
+		for(int station_index = 0; station_index<Pop[0].L[line_index].s.size(); station_index++){		
+			P_best[0].L[line_index].s[station_index] =Pop[0].L[line_index].s[station_index];
+			P_best[0].L[line_index].active[station_index] =Pop[0].L[line_index].active[station_index];
+		}	
+		P_best[0].L[line_index].NV= Pop[0].L[line_index].NV;
+	}
+	cout<<"P_best.ftn at Pop[0]"<<P_best[0].ftn<<endl;
+
 	BPSO(n, G_best, Pop, P_best, set_of_stations, LIN,
 		CR1,  CR2,  CR3);
 
     cout<<"\n Finish!!!!!!!!!!!!"<<endl;
 
 }
-
-
 
 
 bool line::is_it_equal_to(const line& other) const{

@@ -1,4 +1,4 @@
-#define PARALLEL_MODE 0
+#define PARALLEL_MODE 1
 
 
 #define walk_speed 3     //     1.4 m/s     ==>   5.04 km/H
@@ -16,8 +16,8 @@
 #define number_of_lines 7      //Number of line
 #define ST 2					//the time required to access the platform center to the docks
 #define PI 3.14159265358979323846
-#define maximum_walk 4.5 //2.48       // 30 min of walk    htPopulation_sizes://d2wwhj0amomscw.cloudfront.net/temps-parcours/WEB-A4-distances-temps-paris-marche-pied-FOND-IMAGE-V2.pdf
-#define Maximum_Trip_Coefficient  1.5  // tolerate time 1; 1.25; 1.5; 1.75; 2; 3
+#define maximum_walk 2.48       // 30 min of walk    htPopulation_sizes://d2wwhj0amomscw.cloudfront.net/temps-parcours/WEB-A4-distances-temps-paris-marche-pied-FOND-IMAGE-V2.pdf
+#define Maximum_Trip_Coefficient  1 // tolerate time 1; 1.25; 1.5; 1.75; 2; 3
 #define Planification_Horizon 2    // Number of hours in the horizon of planification
 #define Circuity 1.255
 #define Circuity_walker 1.391
@@ -110,7 +110,7 @@ class line{ //TODO aa: COuld you please add some explanation to
 		int index;
 		int Max_NV;
 		int Min_NV;
-		int Nbr_users;
+		int Nbr_users;// number of users taking the bus on each line
 		bool is_it_equal_to(const line& other) const;
 		line(int NV_, vector<int> s_, vector<int> active_);
 		void check_consistency() const;

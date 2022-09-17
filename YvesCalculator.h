@@ -140,7 +140,7 @@ void read_data_network(Network &n, std::string locations, std::string stations);
 void compute_time_matrix(Network &n);
 
 // Initialization of the problem:
-int run_lns_algorithm(int particle_index,const Network &n, std::string results, int ind_sol,
+int run_lns_algorithm(const Network &n, std::string results, int ind_sol,
 	int n_ride_sharing_requests, vector<customer>& cus, const vector<stop> set_of_stations,
 	const vector<Global_solution>& Pop);
 
@@ -191,6 +191,7 @@ class Global_solution
 	int R_rs_pt_w_counter=0; 	
 	int R_pt_counter=0; 	
 	int R_rs_counter=0; 
+	int R_w_counter=0;
 
 
 	std::vector<float> PT_Estimated_EDT_LAT_To_Station; // map a customer position to its PT_Estimated_EDT_LAT_To_Station (Earliest Departure Time, Latest Arrival Time)
@@ -203,7 +204,7 @@ class Global_solution
 	// counted here.
 
 	int ftn=-1; //fitness within the PSO framework
-	vector<vector<float> > DIStance; 	// Matrix of size Number_stations x Number_stations
+	vector<vector<float> > average_travel_time_PT; 	// replace DIStance with average_travel_time_PT: Matrix of size Number_stations x Number_stations
 																		// It is the distance between any pair of stations
 																		// The unit is kilometer
 
@@ -238,7 +239,7 @@ class Global_solution
 	
 	void initialisation_avg_TT_and_category_zone();
 	void Initialise_velocity();
-	
+	void compute_customer_type(const vector<stop>& set_of_stations);
 	double compute_travel_times_PT();
 	
 	double compute_travel_times_RS(const Problem &p, const Solution &s);
@@ -265,7 +266,6 @@ class Global_solution
 	
 	void calculate_frequency(int index_line, const vector<stop>& set_of_stations);
 
-
 	int Generate_NV(int indice_lin, int initial_headway, const vector<stop>& set_of_stations) const;
 	
 	
@@ -281,13 +281,13 @@ class Global_solution
 	void PSO(int indice_ind, const Global_solution& G_best,
 		vector<Global_solution>& P_best_, const vector<stop>& set_of_stations);
 		
-	double Eval(const Network &n, const vector<stop>& set_of_stations, int particle_index);
+	double Eval(const Network &n, const vector<stop>& set_of_stations);
 		
 	//double moyenne()const;
 		
 	int write_ride_sharing_results(const vector<stop>& set_of_stations) const;
 	
-	int run_lns_algorithm(int particle_index, const Network &n,
+	int run_lns_algorithm(const Network &n,
 			const vector<stop> set_of_stations);
 			
 	void proba(int Cmp, int nl, int bit, Global_solution& G_best, 
@@ -296,6 +296,8 @@ class Global_solution
 	void Compute_Customer_PT_trajectory();
 
 	void Update_nbr_usrs();
+
+	void customer_type();
 		
 };//class Global_solution;
 
