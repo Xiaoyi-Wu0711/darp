@@ -1,0 +1,30 @@
+ 
+ 
+ 
+ Number of active stations in each line upon iterations 
+  
+ iteration 	 line 1 	 line 2 	 line 3 	 line 4 	 line 5 	 line 6 	 line 7 
+  
+-1	11	12	18 	11	12	13	6
+
+-1	11	12	17 	11	12	12	6
+
+0	2	1	4 	3	2	4	3
+
+1	8	9	11 	6	9	10	4
+
+2	7	2	5 	5	3	6	2
+
+3	8	8	14 	7	8	5	3
+
+4	8	8	14 	7	8	5	3
+
+5	8	4	5 	3	3	5	4
+
+6	6	5	10 	6	5	7	0
+
+7	5	2	11 	5	7	4	4
+
+8	6	7	9 	7	7	8	2
+
+9	6	6	9 	3	4	5	3

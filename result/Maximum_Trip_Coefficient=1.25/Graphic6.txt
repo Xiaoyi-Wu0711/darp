@@ -1,0 +1,31 @@
+ 
+ 
+ 
+ Number of riders in each type upon each iteration 
+ 
+ 
+ 
+  iteration	 index 	 R_W_PT_RS_	 R_RS_PT_W 	 R_PT 	 R_RS 	 R_w
+
+-1	0	3	7	42	41	7
+-1	1	4	7	31	51	7
+
+0	6	5	8	1	79	7
+
+1	1	7	6	15	65	7
+
+2	9	8	13	13	59	7
+
+3	7	11	15	12	55	7
+
+4	4	8	12	9	64	7
+
+5	8	16	9	14	54	7
+
+6	7	11	12	9	61	7
+
+7	3	10	10	17	56	7
+
+8	3	10	10	17	56	7
+
+9	5	12	10	9	62	7

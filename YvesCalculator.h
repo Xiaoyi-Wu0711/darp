@@ -239,7 +239,7 @@ class Global_solution
 	
 	void initialisation_avg_TT_and_category_zone();
 	void Initialise_velocity();
-	void compute_customer_type(const vector<stop>& set_of_stations);
+	void compute_customer_type(float Maximum_Trip_Coefficient, const vector<stop>& set_of_stations);
 	double compute_travel_times_PT();
 	
 	double compute_travel_times_RS(const Problem &p, const Solution &s);
@@ -257,7 +257,7 @@ class Global_solution
 	 */
 	void Customer_category(int indice_cust);
 	
-	void Define_customer_type(int indice_customer, const vector<stop>& set_of_stations);
+	void Define_customer_type(int Maximum_Trip_Coefficient, int indice_customer, const vector<stop>& set_of_stations);
 	void compteur_2(int iter);
 	
 	float end_to_end_time(int index_line, const vector<stop>& set_of_stations) const;

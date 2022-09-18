@@ -1003,7 +1003,7 @@ void Global_solution::Customer_category (int customer_index){
 }//Global_solution::Customer_category
 
 
-void Global_solution::Define_customer_type(int customer_index, const vector<stop>& set_of_stations){
+void Global_solution::Define_customer_type(int Maximum_Trip_Coefficient, int customer_index, const vector<stop>& set_of_stations){
 	this->check_consistency();
 	float MTT_c = Maximum_Trip_Coefficient*((this->cus.at(customer_index).dstnce*Circuity)/RSV_speed)*60;
 	float travel_time = 0;
@@ -1215,7 +1215,6 @@ void Problem::construct_data_problem(const Network &n, const Global_solution& gl
 				exit(1);
 			}
 			// cout<<"\n ^^^^^^^^Global solution particle "<< glob_sol.nume <<"; n_ride_sharing_requests="<<n_ride_sharing_requests;
-			cout<<"n_ride_sharing_requests"<<n_ride_sharing_requests<<endl;
 			if (Consts::debug_mode)
 			{
 				if (n_ride_sharing_requests < 0 || n_ride_sharing_requests < 0)
@@ -2353,17 +2352,20 @@ void generate_initial_population(Global_solution& G_best, vector<Global_solution
 
 
 
-int Print_Number_of_Vehicles(int iter, const vector<Global_solution>& Pop,const Global_solution& G_best){
-	string const nomFichier(".\\result\\Graphic1.txt");
+int Print_Number_of_Vehicles(string base_path, int iter, const vector<Global_solution>& Pop,const Global_solution& G_best){
+	string const nomFichier(base_path+"\\Graphic1.txt");
 	if(iter==-1){
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){	
+			// cout<<"nomFichier.c_str()"<<nomFichier.c_str()<<endl;
+			// exit(1);
 			monFlux<<"\n"<<"vehicle number for the global best particle"<<endl;
 			monFlux <<"\n"<<"iter \t Indice_best \t TN_Cost \t PT_Veh \t RS_Veh" << endl;
 			monFlux<<"\n"<<-1<<"\t"<<0<<"\t"<<Pop[0].ftn<<"\t"<<Pop[0].obj.fit_1<<"\t"<<Pop[0].obj.fit_2<<endl;
 			monFlux<<"\n"<<-1<<"\t"<<G_best.nume<<"\t"<<G_best.ftn<<"\t"<<G_best.obj.fit_1<<"\t"<<G_best.obj.fit_2<<endl;
 		}else{
 			cout << "ERREUR: Impossible d'ouvrir le fichier. ligne="<<__LINE__ << endl;
+			cout<<base_path+"\\Graphic1.txt"<<endl;
 			exit(0);
 		}
 	}else{
@@ -2378,8 +2380,8 @@ int Print_Number_of_Vehicles(int iter, const vector<Global_solution>& Pop,const 
 	return 0;
 }
 
-int Print_Average_Travel_Time(int iter, const vector<Global_solution>& Pop,const Global_solution& G_best){
-	string const nomFichier(".\\result\\Graphic2.txt");
+int Print_Average_Travel_Time(string base_path,int iter, const vector<Global_solution>& Pop,const Global_solution& G_best){
+	string const nomFichier(base_path+"\\Graphic2.txt");
 	if(iter==-1){
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){	
@@ -2402,8 +2404,8 @@ int Print_Average_Travel_Time(int iter, const vector<Global_solution>& Pop,const
 	return 0;
 }
 
-int Print_Number_of_vehicle_by_Line(int iter, const vector<Global_solution>& Pop,const Global_solution& G_best){
-	string const nomFichier(".\\result\\Graphic3.txt");
+int Print_Number_of_vehicle_by_Line(string base_path, int iter, const vector<Global_solution>& Pop,const Global_solution& G_best){
+	string const nomFichier(base_path+"\\Graphic3.txt");
 	if(iter==-1){
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){	
@@ -2427,8 +2429,8 @@ int Print_Number_of_vehicle_by_Line(int iter, const vector<Global_solution>& Pop
 	return 0;
 }
 
-int print_particle_performance(int iter, const vector<Global_solution>& Pop){
-	string const nomFichier(".\\result\\Graphic12.txt");
+int print_particle_performance(string base_path, int iter, const vector<Global_solution>& Pop){
+	string const nomFichier(base_path+"\\Graphic12.txt");
 	if(iter==-1){
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){
@@ -2453,8 +2455,8 @@ int print_particle_performance(int iter, const vector<Global_solution>& Pop){
 }
 
 
-int Visualize_Number_of_users_of_each_line(int iter, const vector<Global_solution>& Pop,const Global_solution& G_best){
-	string const nomFichier(".\\result\\Graphic8.txt");
+int Visualize_Number_of_users_of_each_line(string base_path, int iter, const vector<Global_solution>& Pop,const Global_solution& G_best){
+	string const nomFichier(base_path+"\\Graphic8.txt");
 	if(iter==-1){
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){
@@ -2479,8 +2481,8 @@ int Visualize_Number_of_users_of_each_line(int iter, const vector<Global_solutio
 	return 0;
 }
 
-int Visualize_number_passenger_category_zone(int iter, const vector<Global_solution>& Pop,const Global_solution& G_best){
-	string const nomFichier(".\\result\\Graphic19.txt");
+int Visualize_number_passenger_category_zone(string base_path, int iter, const vector<Global_solution>& Pop,const Global_solution& G_best){
+	string const nomFichier(base_path+"\\Graphic19.txt");
 	if(iter==-1){
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){
@@ -2515,8 +2517,8 @@ int Visualize_number_passenger_category_zone(int iter, const vector<Global_solut
 }
 
 
-int Print_Active_Stations_in_Gbest_by_Line(int iter, const vector<Global_solution>& Pop, const Global_solution& G_best){
-	string const nomFichier(".\\result\\Graphic15.txt");
+int Print_Active_Stations_in_Gbest_by_Line(string base_path, int iter, const vector<Global_solution>& Pop, const Global_solution& G_best){
+	string const nomFichier(base_path+"\\Graphic15.txt");
 	if(iter==-1){
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){
@@ -2541,8 +2543,8 @@ int Print_Active_Stations_in_Gbest_by_Line(int iter, const vector<Global_solutio
 	return 0;
 }
 
-int Print_Number_Riders_by_Ride_Type(int iter, const vector<Global_solution>& Pop, const Global_solution& G_best){
-	string const nomFichier(".\\result\\Graphic6.txt");
+int Print_Number_Riders_by_Ride_Type(string base_path, int iter, const vector<Global_solution>& Pop, const Global_solution& G_best){
+	string const nomFichier(base_path+"\\Graphic6.txt");
 	if(iter==-1){
 		ofstream monFlux(nomFichier.c_str());
 		if(monFlux){
@@ -2568,15 +2570,15 @@ int Print_Number_Riders_by_Ride_Type(int iter, const vector<Global_solution>& Po
 	return 0;
 }
 
-void print_results(int iter, const vector<Global_solution>& Pop, const Global_solution& G_best){
-	Print_Number_of_Vehicles(iter, Pop, G_best);
-	Print_Average_Travel_Time(iter, Pop, G_best);
-	Print_Number_of_vehicle_by_Line(iter, Pop, G_best);
-	print_particle_performance(iter, Pop);
-	Visualize_Number_of_users_of_each_line(iter, Pop, G_best);
-	Visualize_number_passenger_category_zone(iter, Pop, G_best);
-	Print_Active_Stations_in_Gbest_by_Line(iter, Pop,G_best);
-	Print_Number_Riders_by_Ride_Type(iter, Pop,G_best);
+void print_results(string base_path, int iter, const vector<Global_solution>& Pop, const Global_solution& G_best){
+	Print_Number_of_Vehicles(base_path, iter, Pop, G_best);
+	Print_Average_Travel_Time(base_path, iter, Pop, G_best);
+	Print_Number_of_vehicle_by_Line(base_path, iter, Pop, G_best);
+	print_particle_performance(base_path, iter, Pop);
+	Visualize_Number_of_users_of_each_line(base_path, iter, Pop, G_best);
+	Visualize_number_passenger_category_zone(base_path, iter, Pop, G_best);
+	Print_Active_Stations_in_Gbest_by_Line(base_path, iter, Pop,G_best);
+	Print_Number_Riders_by_Ride_Type(base_path, iter, Pop,G_best);
 }
 
 
@@ -2757,7 +2759,7 @@ tuple<int, double, int> Update_G_best (int iter, Global_solution& G_best, const 
 }
 
 
-void Global_solution::compute_customer_type(const vector<stop>& set_of_stations){
+void Global_solution::compute_customer_type(float Maximum_Trip_Coefficient, const vector<stop>& set_of_stations){
 		this->RideSharing_Users=0;
 		this->Update_nbr_usrs();
 		this->R_w_pt_rs_counter=0;
@@ -2768,7 +2770,7 @@ void Global_solution::compute_customer_type(const vector<stop>& set_of_stations)
 
 		for(int customer_index=0; customer_index<this->cus.size(); customer_index++){
 			this->Customer_category(customer_index);
-			this->Define_customer_type(customer_index,set_of_stations);
+			this->Define_customer_type(Maximum_Trip_Coefficient, customer_index,set_of_stations);
 			
 			if(this->cus[customer_index].RT==0 || this->cus[customer_index].RT==1 || this->cus[customer_index].RT==4)
 				this->RideSharing_Users++;
@@ -2829,7 +2831,7 @@ void change(int iter, double mean, int LastValueGbest, int Act_best,
 }
 
 void BPSO(const Network &n, Global_solution& G_best, vector<Global_solution>& Pop, vector<Global_solution>& P_best_,
-	const vector<stop>& set_of_stations, const vector<line> LIN_, float CR1, double CR2, double CR3){
+	const vector<stop>& set_of_stations, const vector<line> LIN_, float CR1, double CR2, double CR3, float Maximum_Trip_Coefficient, string base_path){
 
 	if (Pop.size() != Consts::population_size+1){
 				std::stringstream err_msg;
@@ -2862,7 +2864,7 @@ void BPSO(const Network &n, Global_solution& G_best, vector<Global_solution>& Po
 	#pragma omp parallel for if (PARALLEL_MODE)
 	#endif
 		for(int particle_index=1; particle_index< Consts::population_size+1;particle_index++){	
-			Pop[particle_index].compute_customer_type(set_of_stations);
+			Pop[particle_index].compute_customer_type(Maximum_Trip_Coefficient, set_of_stations);
 		}
 
 
@@ -2981,7 +2983,7 @@ void BPSO(const Network &n, Global_solution& G_best, vector<Global_solution>& Po
 		}
 	}
 
-	print_results(-1, Pop, G_best);
+	print_results(base_path,-1, Pop, G_best);
 
 	// beginning of the epoches！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！1 
 	int iter = 0;
@@ -3028,7 +3030,7 @@ void BPSO(const Network &n, Global_solution& G_best, vector<Global_solution>& Po
 		#endif
 			for(int particle_index=1; particle_index< Consts::population_size+1;particle_index++)
 			{
-				Pop[particle_index].compute_customer_type(set_of_stations);
+				Pop[particle_index].compute_customer_type(Maximum_Trip_Coefficient, set_of_stations);
 			}
 
 
@@ -3092,7 +3094,7 @@ void BPSO(const Network &n, Global_solution& G_best, vector<Global_solution>& Po
 		cout << "\n iter \t"<<iter<<"\t before Update_G_best G_best= " << G_best.ftn;
 		auto [Act_best, mean, LastValueGbest]= Update_G_best(iter, G_best, Pop);
 		cout << "\n iter \t"<<iter<<"\t after Update_G_best G_best= " << G_best.ftn;
-		print_results(iter, Pop, G_best);
+		print_results(base_path,iter, Pop, G_best);
 		iter++;
 		change(iter, mean, LastValueGbest, Act_best, CR1, CR2, CR3);
 		
@@ -3164,7 +3166,7 @@ Global_solution::Global_solution(int number_of_stations_, const vector <customer
 
 int main(int argc, char *argv[]){
 	
-	if (argc != 5){
+	if (argc != 6){
 		cout<<"The number of parameters is not correct. You have instead to call the program as"<<endl;
 		cout<<"      <name_of_the_executable> <list_of_customers_file> <locations_file> <discretization_file><solution_file>"<<endl;
 		exit(1);
@@ -3174,7 +3176,11 @@ int main(int argc, char *argv[]){
 	std::string locations_file = argv[2];
 	std::string discretization_info_file = argv[3];
 	std::string solution_file = argv[4];
-
+	float Maximum_Trip_Coefficient= std::stof(argv[5]);
+	cout<<"\n Maximum_Trip_Coefficient \t"<<Maximum_Trip_Coefficient<<endl;
+	std::string s={argv[5]};
+	std::string base_path="result\\Maximum_Trip_Coefficient="+s;
+	
 	double CR1 = 0.55;   // CR1 leads the particles towards the corresponding partial best solution found before. CR1 \in [0,1]
 	double CR2 = 0.65;   // CR2 allows the particles to be influenced by the best global solution found before. CR2 \in [0,1]
 	double CR3 = 0.53;  //CR3 allows the randomness degree
@@ -3230,7 +3236,7 @@ int main(int argc, char *argv[]){
 
 	cout<<"Pop[0].cus.size()\t"<<Pop[0].cus.size()<<endl;
 
-	Pop[0].compute_customer_type(set_of_stations);
+	Pop[0].compute_customer_type(Maximum_Trip_Coefficient, set_of_stations);
 	
 	Pop[0].Compute_Customer_PT_trajectory(); //compute cust bus trajectory based on list_of_stations given by dijkstra algorithm
 
@@ -3295,7 +3301,7 @@ int main(int argc, char *argv[]){
 	cout<<"P_best.ftn at Pop[0]"<<P_best[0].ftn<<endl;
 
 	BPSO(n, G_best, Pop, P_best, set_of_stations, LIN,
-		CR1,  CR2,  CR3);
+		CR1,  CR2,  CR3, Maximum_Trip_Coefficient, base_path);
 
     cout<<"\n Finish!!!!!!!!!!!!"<<endl;
 

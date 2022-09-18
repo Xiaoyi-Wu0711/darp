@@ -1,0 +1,28 @@
+
+vehicle number for the global best particle
+
+iter 	 Indice_best 	 TN_Cost 	 PT_Veh 	 RS_Veh
+
+-1	0	783	388	7
+
+-1	4	306	149	8
+
+0	2	282	134	14
+
+1	2	250	120	10
+
+2	3	199	93	13
+
+3	6	173	80	13
+
+4	1	140	64	12
+
+5	1	140	64	12
+
+6	2	111	49	13
+
+7	1	106	46	14
+
+8	4	76	32	12
+
+9	4	76	32	12

@@ -6,7 +6,7 @@ If you want to run in parallel mode, set `#define PARALLEL_MODE 1` in `definitio
 For the parallelization, we use `OpenMP` framework
 To compile. On linux:
 ```
-g++ --std=c++11 -g -fopenmp Project08-07.cpp -o idarp
+g++ --std=c++17 -g -fopenmp Project08-07_reconstruct.cpp -o idarp
 ```
 
 If you are running on Mac or Windows, check the equivalent compilation command (in particular, check how to use OpenMP).
@@ -15,9 +15,12 @@ If you are running on Mac or Windows, check the equivalent compilation command (
 ## Run
 Example of run command line
 ```
-./idarp.exe one_hundred_cust.txt ListeOfLocations_10000_Cust.txt Discretisation_10000_Cust.txt load_file.txt
+./idarp.exe input/one_hundred_cust.txt input/ListeOfLocations_10000_Cust.txt input/Discretisation_10000_Cust.txt input/load_file.txt 1
 
 ```
+run series of experienments by python:
+
+
 
 ### 
 ListOfCustomers:	"username;cus_orig_lat;cus_orig_lon;cus_orig_x;cus_orig_y;cus_orig_id;cus_dest_lat;cus_dest_lon;cus_dest_x;cus_dest_y;cus_dest_id;EAT;LAT;location_orig;location_dest";

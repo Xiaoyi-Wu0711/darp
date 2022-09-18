@@ -17,7 +17,7 @@
 #define ST 2					//the time required to access the platform center to the docks
 #define PI 3.14159265358979323846
 #define maximum_walk 2.48       // 30 min of walk    htPopulation_sizes://d2wwhj0amomscw.cloudfront.net/temps-parcours/WEB-A4-distances-temps-paris-marche-pied-FOND-IMAGE-V2.pdf
-#define Maximum_Trip_Coefficient  1 // tolerate time 1; 1.25; 1.5; 1.75; 2; 3
+// #define Maximum_Trip_Coefficient  2 // tolerate time 1; 1.25; 1.5; 1.75; 2; 3
 #define Planification_Horizon 2    // Number of hours in the horizon of planification
 #define Circuity 1.255
 #define Circuity_walker 1.391
