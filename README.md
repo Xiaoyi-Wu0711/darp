@@ -13,20 +13,19 @@ If you are running on Mac or Windows, check the equivalent compilation command (
 ---
 
 ## Run
-Example of run command line
+
+Example of run command line(the last argument is the maximum tolerating coefficient)
 ```
-./idarp.exe input/one_hundred_cust.txt input/ListeOfLocations_10000_Cust.txt input/Discretisation_10000_Cust.txt input/load_file.txt 1
+./idarp.exe input/one_hundred_cust.txt input/ListeOfLocations_10000_Cust.txt input/Discretisation_10000_Cust.txt input/load_file.txt 1.5
 
 ```
-run series of experienments by python:
+run a series of experienments by python:
 
+```
+python python_script.py
 
+```
 
-### 
-ListOfCustomers:	"username;cus_orig_lat;cus_orig_lon;cus_orig_x;cus_orig_y;cus_orig_id;cus_dest_lat;cus_dest_lon;cus_dest_x;cus_dest_y;cus_dest_id;EAT;LAT;location_orig;location_dest";
-ListOfCustomers: "username;cus_orig_lat;cus_orig_lon;cus_orig_x;cus_orig_y;cus_orig_id;cus_dest_lat;cus_dest_lon;cus_dest_x;cus_dest_y;cus_dest_id;EAT;LAT;location_orig;location_dest";
-
-Stations_100:	"Station_Number   Station_lat    Station_lon    Station_x    Station_y    Station_x_discr    Station_y_discr    Station_Id";
 
 ## Results
 ./result/Graphic1.txt: this file contains the following information the number of vehicle of global best particle per iteration
@@ -57,11 +56,7 @@ Stations_100:	"Station_Number   Station_lat    Station_lon    Station_x    Stati
 
 ./result/Graphic19.txt: contains the number of rider in each line from one zone to another zone
 
-Figure 1 :
-1st plot: we get the number of users of each line from Graphic8.txt and the number of ride sharing users from Graphic6 column 4. The torelated extratime 
-          can be modified in Maximum_Trip_Coefficient
-		  
-Figure 2: 1st plot, Graphic6
-Figure 3: Graphic16
+## visualization
+./plot.xlsx visualize the results above
 
-
+./javascript_visualization/index.html visualize the location of each inactive/active stations
